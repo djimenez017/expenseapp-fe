@@ -13,16 +13,28 @@ const expense = {
 
 export default function expenseCard() {
   return (
-    <div className="p-5 bg-[white] rounded-lg flex flex-row space-x-4 w-full box-border	">
-      <div className="flex flex-column justify-center basis-1/12 bg-[gray] rounded-full w-1/12">
-        <h3 className=" p-8 text-3xl font-bold">PF</h3>
+    <div
+      className="flex p-2 space-x-2 bg-white rounded-md"
+      style={{ maxWidth: "650px" }}
+    >
+      <div className="w-2/12 text-center flex items-center content-center justify-items-center bg-green1 rounded-full">
+        <div className="w-full h-max">
+          <h3 className="text-3xl font-bold">PF</h3>
+        </div>
       </div>
-      <div className="bg-[gray] w-full ">
-        <h3>Gym</h3>
-        <p>Date Added: 1/22/2022</p>
-        <p>$20.99/month</p>
+
+      <div className="w-10/12 ">
+        <div className="flex justify-between content-center items-center">
+          {" "}
+          <h3 className="text-3xl font-bold">Planet Fitness</h3>
+          <p className="text-l font-bold">$20.99/mo</p>
+        </div>
+
         <p>Due Date: 2/22/2022</p>
+        <a href="https://planetfitness.com">Visit Website</a>
       </div>
     </div>
   );
 }
+
+// flex flex-column basis-1/12 bg-green1 rounded-none sm:rounded-full w-1/3 content-center items-center h-full
