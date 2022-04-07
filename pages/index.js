@@ -2,36 +2,24 @@ import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import LoginForm from "../components/forms/loginForm";
-import {
-  ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  useQuery,
-  gql,
-  useReactiveVar,
-} from "@apollo/client";
+import Button from "../components/button";
+import { useQuery, gql } from "@apollo/client";
 
-// const client = new ApolloClient({
-//   uri: "http://localhost:4000/graphql",
-//   cache: new InMemoryCache(),
-// });
-
-// client
-//   .query({
-//     query: gql`
-//       query getAllUsers {
-//         getAllUsers {
-//           id
-//           fullName
-//           website
-//           emailAddress
-//         }
-//       }
-//     `,
-//   })
-//   .then((result) => console.log(result));
+const GET_USERS = gql`
+  query get_all_users {
+    users {
+      id
+      fullName
+      website
+      emailAddress
+      password
+    }
+  }
+`;
 
 export default function Home() {
+  const { loading, error, data } = useQuery(GET_USERS);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -41,8 +29,8 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <div className="container flex bg-white p-10">
-          <div className="w-1/2">
+        <div className="container flex bg-white p-10 text-xl">
+          <div className="w-1/2 p-10">
             <h2 className="text-lg">Expense Tracker</h2> <br />
             <p>
               Track your expenses using this Full-Stack application build using
@@ -51,9 +39,11 @@ export default function Home() {
               Sign up or login to track your expenses!
             </p>
           </div>
-
-          <div className="w-1/2">
+          {/* {console.log(data)} */}
+          <div className="w-1/2  p-10 ">
             <LoginForm />
+            <p className="text-center text-[grey] p-2">Or</p>
+            <Button>Sign Up</Button>
           </div>
         </div>
       </main>
