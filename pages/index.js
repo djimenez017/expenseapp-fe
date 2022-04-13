@@ -18,8 +18,6 @@ const GET_USERS = gql`
 `;
 
 export default function Home() {
-  const { loading, error, data } = useQuery(GET_USERS);
-
   return (
     <div className={styles.container}>
       <Head>

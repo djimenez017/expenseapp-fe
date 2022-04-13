@@ -38,7 +38,7 @@ export default function LoginForm() {
     {
       onCompleted({ login }) {
         if (logInMutation) {
-          localStorage.setItem("Authorization", login.token);
+          localStorage.setItem("token", login.token);
         }
       },
     }
@@ -51,7 +51,6 @@ export default function LoginForm() {
 
   return (
     <div>
-      <h2>Log In</h2>
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
           <label htmlFor="username">Username</label>
