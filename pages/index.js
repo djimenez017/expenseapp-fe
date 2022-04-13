@@ -28,20 +28,9 @@ export default function Home() {
 
       <main className={styles.main}>
         <div className="container flex bg-white p-10 text-xl">
-          <div className="w-1/2 p-10">
-            <h2 className="text-lg">Expense Tracker</h2> <br />
-            <p>
-              Track your expenses using this Full-Stack application build using
-              NextJS, Tailwind CSS, GraphQL, ApolloJS, PrismaJS, and PostgreSQL.{" "}
-              <br /> <br />
-              Sign up or login to track your expenses!
-            </p>
-          </div>
           {/* {console.log(data)} */}
-          <div className="w-1/2  p-10 ">
+          <div className=" p-10 ">
             <LoginForm />
-            <p className="text-center text-[grey] p-2">Or</p>
-            <Button>Sign Up</Button>
           </div>
         </div>
       </main>

@@ -1,14 +1,14 @@
 import NavigationBar from "../components/Navigation/navigationBar";
 import Footer from "../components/Navigation/footer";
 import React from "react";
-import Container from "../components/container";
+import MainContainer from "../components/maincontainer";
 
 export default function dashboard(props) {
   return (
     <>
-      <NavigationBar />
-      <Container>{props.children}</Container>
-      <Footer />
+      {/* <NavigationBar /> */}
+      <MainContainer>{props.children}</MainContainer>
+      {/* <Footer /> */}
     </>
   );
 }
