@@ -23,6 +23,10 @@ const GET_USER_EXPENSES = gql`
   }
 `;
 
+const editHandler = (e) => {
+  console.log(e.target);
+};
+
 export default function Container(props) {
   const { loading, error, data } = useQuery(GET_USER_EXPENSES);
 
@@ -33,11 +37,13 @@ export default function Container(props) {
   const expensesData = data.expenses.map((expense) => {
     return (
       <ExpenseCard
+        click={editHandler}
         key={expense.id}
         name={expense.name}
         amount={expense.amount}
         frequency={expense.frequency}
         dateDue={expense.dateDue}
+        id={expense.id}
       ></ExpenseCard>
     );
   });
@@ -45,10 +51,10 @@ export default function Container(props) {
   return (
     <main
       className="container box-border p-2 space-y-4"
-      style={{ maxWidth: "650px" }}
+      style={{ maxWidth: "750px" }}
     >
       <UserInfo data={userData} />
-      <div className="flex flex-col ">
+      <div className="flex flex-col">
         <TotalCard />
       </div>
       <div className=" w-300px space-y-10">{expensesData}</div>
