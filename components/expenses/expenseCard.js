@@ -1,4 +1,5 @@
 import React from "react";
+import formatMoney from "../lib/formatMoney";
 
 export default function expenseCard(props) {
   const date = props.dateDue;
@@ -18,7 +19,7 @@ export default function expenseCard(props) {
 
   return (
     <div
-      className="flex space-x-2 bg-white rounded-md "
+      className="flex space-x-2 bg-white rounded-md shadow-lg"
       style={{ maxWidth: "750px" }}
     >
       <div className="p-6 w-2/12 text-center flex debug items-center content-center justify-items-center bg-green1 rounded-l-lg">
@@ -32,7 +33,7 @@ export default function expenseCard(props) {
           {" "}
           <h3 className="text-3xl font-bold">{props.name}</h3>
           <p className="text-l font-bold">
-            ${props.amount}/{props.frequency}
+            {formatMoney(props.amount)}/{props.frequency}
           </p>
         </div>
 

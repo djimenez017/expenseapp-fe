@@ -3,6 +3,7 @@ import UserInfo from "./dashboard/userInfo";
 import TotalCard from "./dashboard/totalCard";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
+import Modal from "./dashboard/modal";
 
 const GET_USER_EXPENSES = gql`
   query Expenses {
@@ -53,6 +54,12 @@ export default function Container(props) {
       className="container box-border p-2 space-y-4"
       style={{ maxWidth: "750px" }}
     >
+      {/* <Modal /> */}
+      <button
+        class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        type="button"
+        data-modal-toggle="defaultModal"
+      ></button>
       <UserInfo data={userData} />
       <div className="flex flex-col">
         <TotalCard />
