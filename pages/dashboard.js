@@ -5,10 +5,10 @@ import Container from "../components/container";
 
 export default function dashboard(props) {
   return (
-    <>
+    <div className="w-full	">
       <NavigationBar />
       <Container>{props.children}</Container>
       <Footer />
-    </>
+    </div>
   );
 }
