@@ -1,5 +1,6 @@
 import React from "react";
 import formatMoney from "../lib/formatMoney";
+import Modal from "../dashboard/modal";
 
 export default function expenseCard(props) {
   const date = props.dateDue;
@@ -11,6 +12,7 @@ export default function expenseCard(props) {
 
   const editHandler = () => {
     console.log(props.id);
+    <Modal />;
   };
 
   const deleteHandler = () => {
@@ -19,17 +21,17 @@ export default function expenseCard(props) {
 
   return (
     <div
-      className="flex space-x-2 bg-white rounded-md shadow-lg md:flex-row flex-col"
+      className="flex  bg-white shadow-lg md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
-      <div className=" md:p-6 md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green1 rounded-l-lg hidden">
+      <div className=" md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green1 rounded-l-lg hidden">
         <div className="w-full h-max ">
           <h3 className="text-3xl font-bold ">{initials}</h3>
         </div>
       </div>
 
-      <div className="p-3 md:w-9/12">
-        <div className="flex justify-between content-center items-center">
+      <div className="p-6 md:w-9/12 ">
+        <div className="flex justify-between md:flex-row flex-col text-left ">
           <h3 className="text-3xl font-bold">{props.name}</h3>
           <p className="text-l font-bold">
             {formatMoney(props.amount)}/{props.frequency}
@@ -38,15 +40,15 @@ export default function expenseCard(props) {
         <p>Due Date: {new Date(date).toDateString()}</p>
       </div>
 
-      <div className="md:w-1/12 w-full md:flex-row self-center flex-row">
+      <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
         <button
-          className="md:rounded-tr-lg bg-yellow md:w-full h-full py-2 w-1/2 rounded-bl-lg "
+          className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg"
           onClick={editHandler}
         >
           Edit
         </button>
         <button
-          className="md:rounded-br-lg bg-red md:w-full h-full py-2 text-white w-1/2 rounded-br-lg "
+          className=" bg-red md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg"
           onClick={deleteHandler}
         >
           Delete
