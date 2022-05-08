@@ -19,35 +19,34 @@ export default function expenseCard(props) {
 
   return (
     <div
-      className="flex space-x-2 bg-white rounded-md shadow-lg"
+      className="flex space-x-2 bg-white rounded-md shadow-lg md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
-      <div className="p-6 w-2/12 text-center flex debug items-center content-center justify-items-center bg-green1 rounded-l-lg">
-        <div className="w-full h-max">
-          <h3 className="text-3xl font-bold">{initials}</h3>
+      <div className=" md:p-6 md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green1 rounded-l-lg hidden">
+        <div className="w-full h-max ">
+          <h3 className="text-3xl font-bold ">{initials}</h3>
         </div>
       </div>
 
-      <div className="p-6 w-9/12 ">
+      <div className="p-3 md:w-9/12">
         <div className="flex justify-between content-center items-center">
-          {" "}
           <h3 className="text-3xl font-bold">{props.name}</h3>
           <p className="text-l font-bold">
             {formatMoney(props.amount)}/{props.frequency}
           </p>
         </div>
-
         <p>Due Date: {new Date(date).toDateString()}</p>
       </div>
-      <div className="w1/12 flex-col self-center">
+
+      <div className="md:w-1/12 w-full md:flex-row self-center flex-row">
         <button
-          className="rounded-tr-lg  bg-yellow  w-full h-full py-4"
+          className="md:rounded-tr-lg bg-yellow md:w-full h-full py-2 w-1/2 rounded-bl-lg "
           onClick={editHandler}
         >
           Edit
         </button>
         <button
-          className="rounded-br-lg  bg-red w-full h-full py-4 text-white"
+          className="md:rounded-br-lg bg-red md:w-full h-full py-2 text-white w-1/2 rounded-br-lg "
           onClick={deleteHandler}
         >
           Delete
