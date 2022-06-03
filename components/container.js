@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { gql, useQuery } from "@apollo/client";
 import UserInfo from "./dashboard/userInfo";
 import TotalCard from "./dashboard/totalCard";
@@ -6,7 +7,7 @@ import Button from "./button";
 import Modal from "./dashboard/modal";
 
 const GET_USER_EXPENSES = gql`
-  query Expenses {
+  query expenses {
     expenses {
       id
       author {
@@ -24,11 +25,11 @@ const GET_USER_EXPENSES = gql`
   }
 `;
 
-const editHandler = (e) => {
-  console.log(e.target);
-};
-
 export default function Container(props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [edit, setEdit] = useState();
+  const [remove, setRemove] = useState();
+
   const { loading, error, data } = useQuery(GET_USER_EXPENSES);
 
   if (loading) return "Getting Data...";
@@ -38,7 +39,9 @@ export default function Container(props) {
   const expensesData = data.expenses.map((expense) => {
     return (
       <ExpenseCard
-        click={editHandler}
+        setEdit={(edit) => setEdit(edit)}
+        setRemove={(remove) => setRemove(remove)}
+        click={modalHandler}
         key={expense.id}
         name={expense.name}
         amount={expense.amount}
@@ -49,12 +52,26 @@ export default function Container(props) {
     );
   });
 
+  console.log(edit, remove);
+
+  const modalHandler = () => {
+    setIsOpen(!isOpen);
+    console.log(isOpen);
+  };
+
+  const editHandler = () => {
+    console.log(edit);
+  };
+  const removeHandler = () => {
+    return remove;
+  };
+
   return (
     <main
       className="container box-border p-2 space-y-4"
       style={{ maxWidth: "750px" }}
     >
-      {/* <Modal /> */}
+      <Modal open={isOpen}>Hello There</Modal>
       <button
         className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
         type="button"

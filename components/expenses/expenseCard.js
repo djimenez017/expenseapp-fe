@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import formatMoney from "../lib/formatMoney";
 import Modal from "../dashboard/modal";
+import ExpenseForm from "../forms/addExpense";
 
-export default function expenseCard(props) {
+export default function ExpenseCard(props) {
+  // const [isOpen, setIsOpen] = useState(false);
   const date = props.dateDue;
 
   const initials = props.name
@@ -10,20 +12,24 @@ export default function expenseCard(props) {
     .map((word) => word[0])
     .join("");
 
-  const editHandler = () => {
-    console.log(props.id);
-    <Modal />;
-  };
+  // const editHandler = () => {
+  //   setIsOpen(!isOpen);
 
-  const deleteHandler = () => {
-    console.log(props.id);
-  };
+  //   return;
+  // };
+
+  // const deleteHandler = () => {
+  //   console.log(props.id);
+  // };
 
   return (
     <div
       className="flex  bg-white shadow-lg md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
+      {/* <Modal open={isOpen}>
+        <ExpenseForm />
+      </Modal> */}
       <div className=" md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green1 rounded-l-lg hidden">
         <div className="w-full h-max ">
           <h3 className="text-3xl font-bold ">{initials}</h3>
@@ -43,13 +49,13 @@ export default function expenseCard(props) {
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
         <button
           className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg"
-          onClick={editHandler}
+          onClick={() => props.setEdit(props.id)}
         >
           Edit
         </button>
         <button
           className=" bg-red md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg"
-          onClick={deleteHandler}
+          onClick={() => props.setRemove(props.id)}
         >
           Delete
         </button>
@@ -59,3 +65,5 @@ export default function expenseCard(props) {
 }
 
 // flex flex-column basis-1/12 bg-green1 rounded-none sm:rounded-full w-1/3 content-center items-center h-full
+// setEdit = { setEdit };
+// setExpenseDelete = { setExpenseDelete };
