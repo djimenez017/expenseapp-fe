@@ -52,19 +52,19 @@ export default function Container(props) {
     );
   });
 
-  console.log(edit, remove);
+  // console.log(edit, remove);
 
-  const modalHandler = () => {
-    setIsOpen(!isOpen);
-    console.log(isOpen);
-  };
+  // const modalHandler = () => {
+  //   setIsOpen(!isOpen);
+  //   console.log(isOpen);
+  // };
 
-  const editHandler = () => {
-    console.log(edit);
-  };
-  const removeHandler = () => {
-    return remove;
-  };
+  // const editHandler = () => {
+  //   console.log(edit);
+  // };
+  // const removeHandler = () => {
+  //   return remove;
+  // };
 
   return (
     <main

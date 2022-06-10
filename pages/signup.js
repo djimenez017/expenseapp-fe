@@ -1,13 +1,10 @@
 import React from "react";
-// import CreateExpense from "../components/forms/addExpense";
-import EditExpense from "../components/forms/editExpense";
+import SignUp from "../components/forms/";
 
 export default function Signup() {
   return (
     <>
-      <h1>Create Expense</h1>
-      {/* <CreateExpense /> */}
-      <EditExpense />
+      <h1>Create an account!</h1>
     </>
   );
 }

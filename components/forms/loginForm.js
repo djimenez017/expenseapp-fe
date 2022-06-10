@@ -47,8 +47,6 @@ export default function LoginForm() {
   if (loading) return "Submitting...";
   if (error) return `Submission error! ${error.message}`;
 
-  console.log(data);
-
   return (
     <div>
       <form onSubmit={onSubmitHandler}>

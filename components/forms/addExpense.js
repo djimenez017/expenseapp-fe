@@ -32,12 +32,12 @@ export default function AddExpense() {
 
   const amountHandler = (e) => {
     const stringToInt = parseInt(e.target.value);
-    console.log(stringToInt);
+    // console.log(stringToInt);
     setExpenseAmount(stringToInt);
   };
 
   const dateHandler = (e) => {
-    console.log(e.target.value);
+    //console.log(e.target.value);
     const date = e.target.value;
     const dateEntered = new Date(date);
     setExpenseDate(dateEntered.toISOString());
