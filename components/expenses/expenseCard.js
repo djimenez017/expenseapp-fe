@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import formatMoney from "../lib/formatMoney";
-import Modal from "../dashboard/modal";
-import ExpenseForm from "../forms/addExpense";
+// import Modal from "../dashboard/modal";
+// import ExpenseForm from "../forms/addExpense";
 
 export default function ExpenseCard(props) {
   // const [isOpen, setIsOpen] = useState(false);
