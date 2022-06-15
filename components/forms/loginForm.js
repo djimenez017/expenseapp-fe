@@ -33,6 +33,7 @@ export default function LoginForm() {
     setUsername("");
   };
 
+  console.log(username, password);
   const [logInMutation, { data, loading, error }] = useMutation(
     LOG_IN_MUTATION,
     {
