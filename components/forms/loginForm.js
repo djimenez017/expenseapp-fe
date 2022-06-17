@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Button from "../button";
 import { gql, useMutation } from "@apollo/client";
+import { useRouter } from "next/router";
 
 const LOG_IN_MUTATION = gql`
   mutation LogInMutation($username: String!, $password: String!) {
@@ -18,6 +19,8 @@ export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const router = useRouter();
+
   const usernameHandler = (e) => {
     setUsername(e.target.value);
   };
@@ -33,7 +36,6 @@ export default function LoginForm() {
     setUsername("");
   };
 
-  console.log(username, password);
   const [logInMutation, { data, loading, error }] = useMutation(
     LOG_IN_MUTATION,
     {
@@ -46,6 +48,7 @@ export default function LoginForm() {
   );
 
   if (loading) return "Submitting...";
+  if (data) router.push("/dashboard");
   if (error) return `Submission error! ${error.message}`;
 
   return (

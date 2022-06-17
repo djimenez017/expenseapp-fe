@@ -1,10 +1,9 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
 const httpLink = createHttpLink({
-  //uri: "http://localhost:4000",
-  uri: process.env.PPROD_BE,
+  uri: "http://localhost:4000",
+  //uri: process.env.PPROD_BE,
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -15,9 +14,9 @@ const authLink = setContext((_, { headers }) => {
     headers: {
       ...headers,
       Authorization: token ? `Bearer ${token}` : "",
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
+      // "Content-Type": "application/json",
+      // "Access-Control-Allow-Origin": "*",
+      // "Access-Control-Allow-Credentials": true,
     },
   };
 });

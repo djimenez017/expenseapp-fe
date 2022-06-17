@@ -4,7 +4,6 @@ import formatMoney from "../lib/formatMoney";
 // import ExpenseForm from "../forms/addExpense";
 
 export default function ExpenseCard(props) {
-  // const [isOpen, setIsOpen] = useState(false);
   const date = props.dateDue;
 
   const initials = props.name
@@ -12,24 +11,11 @@ export default function ExpenseCard(props) {
     .map((word) => word[0])
     .join("");
 
-  // const editHandler = () => {
-  //   setIsOpen(!isOpen);
-
-  //   return;
-  // };
-
-  // const deleteHandler = () => {
-  //   console.log(props.id);
-  // };
-
   return (
     <div
       className="flex  bg-white shadow-lg md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
-      {/* <Modal open={isOpen}>
-        <ExpenseForm />
-      </Modal> */}
       <div className=" md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green1 rounded-l-lg hidden">
         <div className="w-full h-max ">
           <h3 className="text-3xl font-bold ">{initials}</h3>
@@ -47,23 +33,13 @@ export default function ExpenseCard(props) {
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
-        <button
-          className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg"
-          onClick={() => props.setEdit(props.id)}
-        >
+        <button className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
           Edit
         </button>
-        <button
-          className=" bg-red md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg"
-          onClick={() => props.setRemove(props.id)}
-        >
+        <button className=" bg-red md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg">
           Delete
         </button>
       </div>
     </div>
   );
 }
-
-// flex flex-column basis-1/12 bg-green1 rounded-none sm:rounded-full w-1/3 content-center items-center h-full
-// setEdit = { setEdit };
-// setExpenseDelete = { setExpenseDelete };

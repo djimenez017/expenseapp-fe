@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Button from "../button";
 import { gql, useMutation } from "@apollo/client";
+import { useRouter } from "next/router";
+import { removeArgumentsFromDocument } from "@apollo/client/utilities";
 
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
@@ -25,6 +27,7 @@ export default function AddExpense() {
   const [expenseAmount, setExpenseAmount] = useState();
   const [expenseDate, setExpenseDate] = useState("");
   const [expenseFrequency, setExpenseFrequency] = useState("");
+  const router = useRouter();
 
   const nameHandler = (e) => {
     setExpenseName(e.target.value);
@@ -69,6 +72,7 @@ export default function AddExpense() {
     useMutation(ADD_EXPENSE_MUTATION);
 
   if (loading) return <p>Expense Added!!</p>;
+  if (data) router.push("/dashboard");
   if (error) return `Submission error! ${error.message}`;
 
   return (

@@ -4,6 +4,8 @@ import styles from "../styles/Home.module.css";
 import LoginForm from "../components/forms/loginForm";
 import Button from "../components/button";
 import { useQuery, gql } from "@apollo/client";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 const GET_USERS = gql`
   query get_all_users {
@@ -18,6 +20,8 @@ const GET_USERS = gql`
 `;
 
 export default function Home() {
+  const router = useRouter();
+
   return (
     <div className="p-3 container flex justify-center items-center h-screen">
       <Head>
@@ -29,7 +33,10 @@ export default function Home() {
       <main className="flex">
         <div className="bg-white md:p-10 text-xl md:flex ">
           <div className="md:w-1/2 md:p-10">
-            <h2 className="text-lg">Expense Tracker</h2> <br />
+            <h2 className="text-lg">
+              <Link href={`/`}>Expense Tracker</Link>
+            </h2>{" "}
+            <br />
             <p>
               Track your expenses using this Full-Stack application build using
               NextJS, Tailwind CSS, GraphQL, ApolloJS, PrismaJS, and PostgreSQL.{" "}
@@ -41,29 +48,12 @@ export default function Home() {
           <div className="md:w-1/2 md:p-10 ">
             <LoginForm />
             <p className="text-center text-[grey] p-2">Or</p>
-            <Button>Sign Up</Button>
+            <Button>
+              <Link href={`/signup`}>Sign Up</Link>
+            </Button>
           </div>
         </div>
       </main>
-
-      {/* <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer> */}
     </div>
   );
 }
-
-// className={styles.container}
-// className={styles.main}
-//className={styles.logo}
-//className={styles.footer}
-//<div className="p-3 container flex justify-center items-center h-screen">
