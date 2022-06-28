@@ -33,7 +33,6 @@ export default function EditExpense() {
 
   return (
     <>
-      <div>Edit Expense</div>{" "}
       <form autoComplete="off">
         <div className="my-5">
           <label htmlFor="ExpenseName">Expense Name</label>

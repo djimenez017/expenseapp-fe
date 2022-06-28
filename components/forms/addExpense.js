@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Button from "../button";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
-import { removeArgumentsFromDocument } from "@apollo/client/utilities";
 
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
@@ -35,7 +34,6 @@ export default function AddExpense() {
 
   const amountHandler = (e) => {
     const stringToInt = parseInt(e.target.value);
-    // console.log(stringToInt);
     setExpenseAmount(stringToInt);
   };
 
@@ -48,6 +46,7 @@ export default function AddExpense() {
 
   const frequencyHandler = (e) => {
     setExpenseFrequency(e.target.value);
+    console.log(e.target.value);
   };
 
   const expenseSubmitHandler = (e) => {
@@ -66,8 +65,6 @@ export default function AddExpense() {
     setExpenseFrequency("");
   };
 
-  // console.log(expenseAmount, expenseDate, expenseFrequency, expenseName);
-
   const [addExpense, { data, loading, error }] =
     useMutation(ADD_EXPENSE_MUTATION);
 
@@ -77,7 +74,6 @@ export default function AddExpense() {
 
   return (
     <>
-      <div>Add New Expense</div>{" "}
       <form onSubmit={expenseSubmitHandler} autoComplete="off">
         <div className="my-5">
           <label htmlFor="ExpenseName">Expense Name</label>
@@ -96,12 +92,18 @@ export default function AddExpense() {
             type="number"
           />
           <label htmlFor="Frequency">Frequency</label>
-          <input
-            name="Frequency"
+
+          <select
+            name="frequency"
+            id="frequency"
             className={"p-2 w-full"}
-            required
             onChange={frequencyHandler}
-          />
+          >
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+            <option value="YEARLY">Yearly</option>
+          </select>
           <label htmlFor="Date">Due Date</label>
           <input
             id="Date"

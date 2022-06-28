@@ -1,11 +1,10 @@
 /* eslint-disable @next/next/link-passhref */
-import { useState } from "react";
 import { gql, useQuery } from "@apollo/client";
 import UserInfo from "./dashboard/userInfo";
-import TotalCard from "./dashboard/totalCard";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
 import Link from "next/link";
+import Router, { useRouter } from "next/router";
 
 const GET_USER_EXPENSES = gql`
   query expenses {
@@ -27,13 +26,14 @@ const GET_USER_EXPENSES = gql`
 `;
 
 export default function Container(props) {
+  const router = useRouter();
+
   const { loading, error, data } = useQuery(GET_USER_EXPENSES);
 
   if (loading) return "Getting Data...";
-  if (!data) return "Waiting on Data";
+  if (!data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 
-  const userData = data.expenses[0].author;
   const expensesData = data.expenses.map((expense) => {
     return (
       <ExpenseCard
@@ -57,7 +57,7 @@ export default function Container(props) {
         type="button"
         data-modal-toggle="defaultModal"
       ></button>
-      <UserInfo data={userData} />
+      <UserInfo />
       <div className="flex flex-col">
         <Button>
           {" "}

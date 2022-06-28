@@ -12,7 +12,9 @@ export default function addExpense() {
           className="container box-border p-2 space-y-4"
           style={{ maxWidth: "750px" }}
         >
-          <h2>Create an Expense</h2>
+          <h2 className="text-4xl font-bold tracking-wide text-center">
+            Create an Expense
+          </h2>
           <AddExpenseForm />
         </main>
       </div>
