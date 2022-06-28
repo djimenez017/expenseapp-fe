@@ -1,7 +1,6 @@
 import React from "react";
 
 export default function modal({ open, children }) {
-  // console.log(open);
   if (open === false) return null;
   return (
     <div className="z-999 bg-white h-screen w-screen	">
