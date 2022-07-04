@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import formatMoney from "../lib/formatMoney";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 const DELETE_EXPENSE = gql`
   mutation DeleteExpense($ID: Int) {
@@ -31,7 +32,6 @@ export default function ExpenseCard(props) {
         ID: parseInt(props.id),
       },
     });
-    router.reload(window.location.pathname);
   };
 
   const [deleteExpense, { data, loading, error }] = useMutation(DELETE_EXPENSE);
@@ -61,9 +61,11 @@ export default function ExpenseCard(props) {
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
-        <button className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
-          Edit
-        </button>
+        <Link href={`/edit/${props.id}`} passHref>
+          <button className=" bg-yellow md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
+            Edit
+          </button>
+        </Link>
         <button
           className=" bg-red md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg"
           onClick={deleteHandler}
