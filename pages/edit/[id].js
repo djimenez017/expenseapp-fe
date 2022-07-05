@@ -4,7 +4,7 @@ import useForm from "../../components/lib/useForm";
 import Session from "../../components/hoc/session";
 import Navigation from "../../components/Navigation/navigationBar";
 import Button from "../../components/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const GET_SINGLE_EXPENSE = gql`
   query getSingleExpense($ID: ID) {
@@ -44,6 +44,7 @@ const UPDATE_EXPENSE = gql`
 export default function SingleExpense() {
   const router = useRouter();
   const expenseId = parseInt(router.query["id"]);
+  const [date, setDate] = useState("");
 
   const { data, error, loading } = useQuery(GET_SINGLE_EXPENSE, {
     variables: { ID: expenseId },
@@ -53,23 +54,19 @@ export default function SingleExpense() {
     editExpense,
     { data: updatedData, error: updateError, loading: updateLoading },
   ] = useMutation(UPDATE_EXPENSE);
-  console.log(updateError);
 
   const { inputs, handleChange, resetForm, clearForm } = useForm(data?.expense);
 
   if (loading) return <p>Loading...</p>;
+  if (updateLoading) return <p>Updating</p>;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    editExpense({
-      ID: expenseId,
-      name: inputs.name,
-      amount: inputs.amount,
-      frequency: inputs.frequency,
-      dateDue: inputs.dateDue,
-    });
-  };
-  console.log(inputs.dateDue);
+  // const dateHandler = (e) => {
+  //   const date = e.target.value;
+  //   const dateEntered = new Date(date);
+  //   setDate(dateEntered.toISOString());
+  // };
+
+  console.table(inputs);
   return (
     <Session>
       <div className="w-full">
@@ -81,7 +78,21 @@ export default function SingleExpense() {
           <h2 className="text-4xl font-bold tracking-wide text-center">
             Edit Expense{" "}
           </h2>
-          <form autoComplete="off" onSubmit={handleSubmit}>
+          <form
+            autoComplete="off"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await editExpense({
+                variables: {
+                  ID: expenseId,
+                  name: inputs.name,
+                  amount: inputs.amount,
+                  frequency: inputs.frequency,
+                  dateDue: inputs.dateDue,
+                },
+              });
+            }}
+          >
             <div className="my-5">
               <label htmlFor="ExpenseName">
                 Expense Name
@@ -115,6 +126,7 @@ export default function SingleExpense() {
                   name="frequency"
                   id="frequency"
                   value={inputs.frequency}
+                  onChange={handleChange}
                   className={"p-2 w-full"}
                 >
                   <option value="DAILY">Daily</option>
@@ -136,7 +148,7 @@ export default function SingleExpense() {
               <br />
               <br />
 
-              <Button type="Submit">Done</Button>
+              <Button type="Submit">Update Expense</Button>
             </div>
           </form>
         </main>
