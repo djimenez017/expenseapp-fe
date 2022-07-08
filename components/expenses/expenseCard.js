@@ -60,7 +60,7 @@ export default function ExpenseCard(props) {
 
   if (loading) return <p>Deleting Expense</p>;
   if (error) return `Deletion Error ${error.message}`;
-  console.log(data);
+  //(data);
 
   return (
     <div
