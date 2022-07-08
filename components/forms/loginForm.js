@@ -55,22 +55,26 @@ export default function LoginForm() {
     <div>
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
-          <label htmlFor="username">Username</label>
-          <input
-            id="username"
-            onChange={usernameHandler}
-            className={"p-2 w-full"}
-            value={username}
-            required
-          />
-          <label htmlFor="password">Password</label>
-          <input
-            name="password"
-            onChange={passwordHandler}
-            className={"p-2 w-full"}
-            value={password}
-            type="password"
-          />
+          <label htmlFor="username">
+            Username
+            <input
+              id="username"
+              onChange={usernameHandler}
+              className={"p-2 w-full"}
+              value={username}
+              required
+            />
+          </label>
+          <label htmlFor="password">
+            Password
+            <input
+              name="password"
+              onChange={passwordHandler}
+              className={"p-2 w-full"}
+              value={password}
+              type="password"
+            />
+          </label>
           <br /> <br />
           <Button type="Submit">Log In</Button>
         </div>
