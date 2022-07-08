@@ -44,7 +44,6 @@ export default function Home() {
               Sign up or login to track your expenses!
             </p>
           </div>
-          {/* {console.log(data)} */}
           <div className="md:w-1/2 md:p-10 ">
             <LoginForm />
             <p className="text-center text-[grey] p-2">Or</p>

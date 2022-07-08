@@ -68,52 +68,59 @@ export default function RegisterForm() {
   if (data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 
-  console.log(name, email, username, password);
-
   return (
     <div>
       {" "}
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
-          <label htmlFor="name">Full Name</label>
-          <input
-            id="name"
-            className={"p-2 w-full"}
-            onChange={nameHandler}
-            type="text"
-            value={name}
-            required
-          />
+          <label htmlFor="name">
+            Full Name
+            <input
+              id="name"
+              className={"p-2 w-full"}
+              onChange={nameHandler}
+              type="text"
+              value={name}
+              required
+            />
+          </label>
           <br />
-          <label htmlFor="name">Email Address</label>
-          <input
-            id="name"
-            className={"p-2 w-full"}
-            onChange={emailHandler}
-            type="email"
-            value={email}
-            required
-          />
+          <label htmlFor="name">
+            Email Address
+            <input
+              id="email"
+              className={"p-2 w-full"}
+              onChange={emailHandler}
+              type="email"
+              value={email}
+              required
+            />
+          </label>
           <br />
-          <label htmlFor="name">Username</label>
-          <input
-            id="name"
-            className={"p-2 w-full"}
-            onChange={usernameHandler}
-            type="text"
-            value={username}
-            required
-          />
+          <label htmlFor="username">
+            Username
+            <input
+              id="name"
+              className={"p-2 w-full"}
+              onChange={usernameHandler}
+              type="text"
+              value={username}
+              required
+            />
+          </label>
           <br />
-          <label htmlFor="password">Password</label>
-          <input
-            name="password"
-            className={"p-2 w-full"}
-            onChange={passwordHandler}
-            type="password"
-            value={password}
-            required
-          />
+          <label htmlFor="password">
+            Password
+            <input
+              id="password"
+              name="password"
+              className={"p-2 w-full"}
+              onChange={passwordHandler}
+              type="password"
+              value={password}
+              required
+            />
+          </label>
           <br />
           <br /> <br />
           <Button type="Submit">Sign Up</Button>

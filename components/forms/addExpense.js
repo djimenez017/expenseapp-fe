@@ -38,7 +38,6 @@ export default function AddExpense() {
   };
 
   const dateHandler = (e) => {
-    //console.log(e.target.value);
     const date = e.target.value;
     const dateEntered = new Date(date);
     setExpenseDate(dateEntered.toISOString());

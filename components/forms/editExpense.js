@@ -25,8 +25,6 @@ export default function EditExpense() {
   if (loading) return <p>Expense Added!!</p>;
   if (error) return `Submission error! ${error}`;
 
-  console.log(data.expense);
-
   const nameHandler = () => {
     setName(data.expense.name);
   };

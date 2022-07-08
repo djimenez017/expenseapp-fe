@@ -69,7 +69,6 @@ export default function SingleExpense() {
   }
 
   const dateHandler = (e) => {
-    //console.log(e.target.value);
     const date = e.target.value;
     const dateEntered = new Date(date);
     setUDate(dateEntered.toISOString());
@@ -89,7 +88,6 @@ export default function SingleExpense() {
           <form
             autoComplete="off"
             onSubmit={async (e) => {
-              console.log(uDate);
               e.preventDefault();
               await editExpense({
                 variables: {
