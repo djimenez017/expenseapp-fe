@@ -11,7 +11,7 @@ export default function NavigationBar() {
   };
 
   return (
-    <div className="flex flex-row justify-between content-center items-center py-3 w-full bg-green1 min-h-5 px-2">
+    <div className="flex flex-row justify-between content-center items-center py-2 w-full bg-green1  px-2">
       <h1 className="text-white text-4xl font-bold ">
         <Link href={"/"}>ExpenseApp</Link>
       </h1>

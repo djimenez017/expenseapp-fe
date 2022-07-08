@@ -74,7 +74,7 @@ export default function AddExpense() {
   return (
     <>
       <form onSubmit={expenseSubmitHandler} autoComplete="off">
-        <div className="my-5">
+        <div className="my-5 ">
           <label htmlFor="ExpenseName">Expense Name</label>
           <input
             id="ExpenseName"
@@ -91,7 +91,6 @@ export default function AddExpense() {
             type="number"
           />
           <label htmlFor="Frequency">Frequency</label>
-
           <select
             name="frequency"
             id="frequency"
@@ -111,7 +110,7 @@ export default function AddExpense() {
             onChange={dateHandler}
             type="date"
           />
-          <br />
+          <br /> <br />
           <Button type="Submit">Add Expense</Button>
         </div>
       </form>

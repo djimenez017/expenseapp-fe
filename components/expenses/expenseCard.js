@@ -12,6 +12,25 @@ const DELETE_EXPENSE = gql`
   }
 `;
 
+const GET_USER_EXPENSES = gql`
+  query expenses {
+    expenses {
+      id
+      author {
+        fullName
+        id
+        username
+        emailAddress
+      }
+      name
+      amount
+      frequency
+      dateDue
+      expenseAuthor
+    }
+  }
+`;
+
 export default function ExpenseCard(props) {
   const router = useRouter();
   const initials = props.name
@@ -34,10 +53,14 @@ export default function ExpenseCard(props) {
     });
   };
 
-  const [deleteExpense, { data, loading, error }] = useMutation(DELETE_EXPENSE);
+  const [deleteExpense, { data, loading, error }] = useMutation(
+    DELETE_EXPENSE,
+    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
+  );
 
   if (loading) return <p>Deleting Expense</p>;
   if (error) return `Deletion Error ${error.message}`;
+  console.log(data);
 
   return (
     <div

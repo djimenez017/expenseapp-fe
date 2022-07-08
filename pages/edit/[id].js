@@ -44,8 +44,7 @@ const UPDATE_EXPENSE = gql`
 export default function SingleExpense() {
   const router = useRouter();
   const expenseId = parseInt(router.query["id"]);
-  const [date, setDate] = useState("");
-
+  const [uDate, setUDate] = useState("");
   const { data, error, loading } = useQuery(GET_SINGLE_EXPENSE, {
     variables: { ID: expenseId },
   });
@@ -59,14 +58,23 @@ export default function SingleExpense() {
 
   if (loading) return <p>Loading...</p>;
   if (updateLoading) return <p>Updating</p>;
-
-  // const dateHandler = (e) => {
-  //   const date = e.target.value;
-  //   const dateEntered = new Date(date);
-  //   setDate(dateEntered.toISOString());
-  // };
+  if (updatedData) router.push("/dashboard");
 
   console.table(inputs);
+
+  if (inputs.dateDue) {
+    let formattedDate;
+    const dateEntered = new Date(inputs.dateDue);
+    formattedDate = dateEntered.toISOString().split("T")[0];
+  }
+
+  const dateHandler = (e) => {
+    //console.log(e.target.value);
+    const date = e.target.value;
+    const dateEntered = new Date(date);
+    setUDate(dateEntered.toISOString());
+  };
+
   return (
     <Session>
       <div className="w-full">
@@ -81,6 +89,7 @@ export default function SingleExpense() {
           <form
             autoComplete="off"
             onSubmit={async (e) => {
+              console.log(uDate);
               e.preventDefault();
               await editExpense({
                 variables: {
@@ -88,7 +97,7 @@ export default function SingleExpense() {
                   name: inputs.name,
                   amount: inputs.amount,
                   frequency: inputs.frequency,
-                  dateDue: inputs.dateDue,
+                  dateDue: uDate,
                 },
               });
             }}
@@ -141,8 +150,8 @@ export default function SingleExpense() {
                   id="Date"
                   className={"p-2 w-full"}
                   type="date"
-                  value={inputs.dateDue}
-                  onChange={handleChange}
+                  value={formattedDate}
+                  onChange={dateHandler}
                 />
               </label>
               <br />
