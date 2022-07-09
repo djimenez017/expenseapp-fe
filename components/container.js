@@ -49,7 +49,7 @@ export default function Container(props) {
 
   return (
     <main
-      className="container box-border p-2 space-y-4"
+      className="container box-border p-2 space-y-4 mb-10"
       style={{ maxWidth: "750px" }}
     >
       <button

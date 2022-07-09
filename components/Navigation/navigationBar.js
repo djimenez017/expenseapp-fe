@@ -16,12 +16,12 @@ export default function NavigationBar() {
         <Link href={"/"}>ExpenseApp</Link>
       </h1>
       <ol className="flex flex-row justify-end">
-        <li className="px-5 text-white font-bold">
+        <li className="px-2 text-white font-bold">
           <button>
             <Link href="/dashboard">Dashboard</Link>
           </button>
         </li>
-        <li className="px-5 text-white font-bold">
+        <li className="px-2 text-white font-bold">
           <button onClick={signout}>Log Out</button>
         </li>
       </ol>
