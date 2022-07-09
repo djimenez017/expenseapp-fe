@@ -1,5 +1,6 @@
 import Navigation from "../components/Navigation/navigationBar";
 import RegisterForm from "../components/forms/registerForm";
+import Title from "../components/UI/Title";
 
 export default function Signup() {
   return (
@@ -9,7 +10,7 @@ export default function Signup() {
         className="container box-border p-2 space-y-4"
         style={{ maxWidth: "750px" }}
       >
-        <h2>Create an Account</h2>
+        <Title>Create an Account</Title>
         <RegisterForm />
       </main>
     </div>

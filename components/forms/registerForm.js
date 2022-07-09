@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Button from "../button";
 import { useRouter } from "next/router";
 import { gql, useMutation } from "@apollo/client";
+import Input from "../forms/formComponents/input";
 
 const REGISTER_MUTATION = gql`
   mutation RegisterMutation(
@@ -69,63 +70,57 @@ export default function RegisterForm() {
   if (error) return `Submission error! ${error.message}`;
 
   return (
-    <div>
-      {" "}
+    <>
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
-          <label htmlFor="name">
+          <Input
+            htmlFor="name"
+            id="name"
+            name="name"
+            onChange={nameHandler}
+            type="text"
+            value={name}
+            required
+          >
             Full Name
-            <input
-              id="name"
-              className={"p-2 w-full"}
-              onChange={nameHandler}
-              type="text"
-              value={name}
-              required
-            />
-          </label>
-          <br />
-          <label htmlFor="name">
+          </Input>
+          <Input
+            htmlFor="email"
+            id="email"
+            name="email"
+            onChange={emailHandler}
+            type="email"
+            value={email}
+            required
+          >
             Email Address
-            <input
-              id="email"
-              className={"p-2 w-full"}
-              onChange={emailHandler}
-              type="email"
-              value={email}
-              required
-            />
-          </label>
-          <br />
-          <label htmlFor="username">
+          </Input>
+          <Input
+            htmlFor="username"
+            id="username"
+            name="username"
+            onChange={usernameHandler}
+            type="text"
+            value={username}
+            required
+          >
             Username
-            <input
-              id="name"
-              className={"p-2 w-full"}
-              onChange={usernameHandler}
-              type="text"
-              value={username}
-              required
-            />
-          </label>
-          <br />
-          <label htmlFor="password">
+          </Input>
+          <Input
+            htmlFor="password"
+            id="password"
+            name="password"
+            onChange={passwordHandler}
+            type="password"
+            value={password}
+            required
+          >
             Password
-            <input
-              id="password"
-              name="password"
-              className={"p-2 w-full"}
-              onChange={passwordHandler}
-              type="password"
-              value={password}
-              required
-            />
-          </label>
-          <br />
-          <br /> <br />
+          </Input>
+
           <Button type="Submit">Sign Up</Button>
         </div>
       </form>
-    </div>
+    </>
   );
 }

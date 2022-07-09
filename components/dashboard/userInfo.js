@@ -15,7 +15,7 @@ const GET_CURRENT_USER = gql`
 
 export default function UserInfo() {
   const { loading, data, error } = useQuery(GET_CURRENT_USER);
-
+  console.log(data);
   if (loading) return <p>Fetching User</p>;
   if (error) return <p>Error</p>;
 

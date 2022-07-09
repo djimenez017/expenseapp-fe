@@ -7,7 +7,7 @@ import Session from "../components/hoc/session";
 export default function dashboard(props) {
   return (
     <Session>
-      <div className="w-full">
+      <div className="w-full ">
         <NavigationBar />
         <Container>{props.children}</Container>
         <Footer />

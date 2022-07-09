@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Button from "../button";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
+import Input from "../forms/formComponents/input";
 
 const LOG_IN_MUTATION = gql`
   mutation LogInMutation($username: String!, $password: String!) {
@@ -55,27 +56,26 @@ export default function LoginForm() {
     <div>
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
-          <label htmlFor="username">
+          <Input
+            htmlFor="username"
+            id="username"
+            onChange={usernameHandler}
+            value={username}
+            required
+            name="username"
+          >
             Username
-            <input
-              id="username"
-              onChange={usernameHandler}
-              className={"p-2 w-full"}
-              value={username}
-              required
-            />
-          </label>
-          <label htmlFor="password">
+          </Input>
+          <Input
+            htmlFor="password"
+            name="password"
+            onChange={passwordHandler}
+            value={password}
+            type="password"
+          >
             Password
-            <input
-              name="password"
-              onChange={passwordHandler}
-              className={"p-2 w-full"}
-              value={password}
-              type="password"
-            />
-          </label>
-          <br /> <br />
+          </Input>
+
           <Button type="Submit">Log In</Button>
         </div>
       </form>

@@ -4,7 +4,11 @@ import useForm from "../../components/lib/useForm";
 import Session from "../../components/hoc/session";
 import Navigation from "../../components/Navigation/navigationBar";
 import Button from "../../components/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Title from "../../components/UI/Title";
+import Input from "../../components/forms/formComponents/input";
+import Select from "../../components/forms/formComponents/Select";
+import Footer from "../../components/Navigation/footer";
 
 const GET_SINGLE_EXPENSE = gql`
   query getSingleExpense($ID: ID) {
@@ -76,15 +80,13 @@ export default function SingleExpense() {
 
   return (
     <Session>
-      <div className="w-full">
+      <div className="w-full flex h-screen justify-center items-center">
         <Navigation />
         <main
           className="container box-border p-2 space-y-4"
           style={{ maxWidth: "750px" }}
         >
-          <h2 className="text-4xl font-bold tracking-wide text-center">
-            Edit Expense{" "}
-          </h2>
+          <Title>Edit Expense </Title>
           <form
             autoComplete="off"
             onSubmit={async (e) => {
@@ -100,65 +102,51 @@ export default function SingleExpense() {
               });
             }}
           >
-            <div className="my-5">
-              <label htmlFor="ExpenseName">
-                Expense Name
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  className={"p-2 w-full"}
-                  value={inputs.name}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+            <Input
+              htmlFor="ExpenseName"
+              id="name"
+              name="name"
+              type="text"
+              value={inputs.name}
+              onChange={handleChange}
+              required
+            >
+              Expense Name
+            </Input>
+            <Input
+              htmlFor="amount"
+              id="amount"
+              required
+              type="number"
+              name="amount"
+              value={inputs.amount}
+              onChange={handleChange}
+            >
+              Amount
+            </Input>
+            <Select
+              htmlFor="frequency"
+              name="frequency"
+              id="frequency"
+              value={inputs.frequency}
+              onChange={handleChange}
+            >
+              Frequency
+            </Select>
 
-              <br />
-              <label htmlFor="Amount">
-                Amount
-                <input
-                  id="amount"
-                  className={"p-2 w-full"}
-                  required
-                  type="number"
-                  name="amount"
-                  value={inputs.amount}
-                  onChange={handleChange}
-                />
-              </label>
-              <label htmlFor="Frequency">
-                Frequency
-                <select
-                  name="frequency"
-                  id="frequency"
-                  value={inputs.frequency}
-                  onChange={handleChange}
-                  className={"p-2 w-full"}
-                >
-                  <option value="DAILY">Daily</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="MONTHLY">Monthly</option>
-                  <option value="YEARLY">Yearly</option>
-                </select>
-              </label>
-              <label htmlFor="Date">
-                Due Date
-                <input
-                  id="Date"
-                  className={"p-2 w-full"}
-                  type="date"
-                  value={formattedDate}
-                  onChange={dateHandler}
-                />
-              </label>
-              <br />
-              <br />
-
-              <Button type="Submit">Update Expense</Button>
-            </div>
+            <Input
+              htmlFor="date"
+              id="date"
+              type="date"
+              value={formattedDate}
+              onChange={dateHandler}
+            >
+              Due Date
+            </Input>
+            <Button type="Submit">Update Expense</Button>
           </form>
         </main>
+        <Footer />
       </div>
     </Session>
   );

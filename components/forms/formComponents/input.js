@@ -2,17 +2,21 @@ import React from "react";
 
 export default function input(props) {
   return (
-    <div className="my-5 ">
-      <label htmlFor={props.for}>
-        {props.children}: <br />
+    <>
+      <label htmlFor={props.htmlFor}>
+        {props.children}
         <input
+          id={props.id}
+          onChange={props.onChange}
           className="p-2 w-full"
-          placeholder={props.placeholder}
+          value={props.value}
           type={props.type}
           name={props.name}
-          required={props.required}
+          required
         />
       </label>
-    </div>
+      <br />
+      <br />
+    </>
   );
 }

@@ -2,6 +2,8 @@ import React from "react";
 import Navigation from "../components/Navigation/navigationBar";
 import AddExpenseForm from "../components/forms/addExpense";
 import Session from "../components/hoc/session";
+import Title from "../components/UI/Title";
+import Footer from "../components/Navigation/footer";
 
 export default function addExpense() {
   return (
@@ -12,12 +14,11 @@ export default function addExpense() {
           className="container box-border p-2 space-y-4 "
           style={{ maxWidth: "750px" }}
         >
-          <h2 className="text-4xl font-bold tracking-wide text-center">
-            Create an Expense
-          </h2>
+          <Title>Create an Expense</Title>
           <AddExpenseForm />
         </main>
       </div>
+      <Footer />
     </Session>
   );
 }
