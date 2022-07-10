@@ -3,6 +3,7 @@ import Button from "../button";
 import { useRouter } from "next/router";
 import { gql, useMutation } from "@apollo/client";
 import Input from "../forms/formComponents/input";
+import Submit from "../forms/formComponents/Submit";
 
 const REGISTER_MUTATION = gql`
   mutation RegisterMutation(
@@ -69,6 +70,9 @@ export default function RegisterForm() {
   if (data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 
+  console.log(name, email, username, password);
+  console.log(error);
+
   return (
     <>
       <form onSubmit={onSubmitHandler}>
@@ -118,7 +122,7 @@ export default function RegisterForm() {
             Password
           </Input>
 
-          <Button type="Submit">Sign Up</Button>
+          <Submit />
         </div>
       </form>
     </>
