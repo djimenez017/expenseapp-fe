@@ -46,7 +46,7 @@ export default function Home() {
           <div className="md:w-1/2 md:p-10 ">
             <LoginForm />
             <p className="text-center text-[grey] p-2">Or</p>
-            <Submit />
+            <Button to="signup">Sign Up</Button>
           </div>
         </div>
       </main>
