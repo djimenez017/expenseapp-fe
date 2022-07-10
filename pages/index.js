@@ -1,11 +1,10 @@
 import Head from "next/head";
-import Image from "next/image";
-import styles from "../styles/Home.module.css";
 import LoginForm from "../components/forms/loginForm";
 import Button from "../components/button";
-import { useQuery, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Submit from "../components/forms/formComponents/Submit";
 
 const GET_USERS = gql`
   query get_all_users {
@@ -47,7 +46,7 @@ export default function Home() {
           <div className="md:w-1/2 md:p-10 ">
             <LoginForm />
             <p className="text-center text-[grey] p-2">Or</p>
-            <Button to="/signup">Sign Up</Button>
+            <Submit />
           </div>
         </div>
       </main>
