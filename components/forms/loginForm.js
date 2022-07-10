@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Button from "../button";
+import Submit from "../forms/formComponents/Submit";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
@@ -76,7 +76,7 @@ export default function LoginForm() {
             Password
           </Input>
 
-          <Button type="Submit">Log In</Button>
+          <Submit />
         </div>
       </form>
     </div>

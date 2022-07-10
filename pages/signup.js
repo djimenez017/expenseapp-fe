@@ -4,10 +4,10 @@ import Title from "../components/UI/Title";
 
 export default function Signup() {
   return (
-    <div className="w-full	">
+    <div className="w-full	container flex justify-center items-center h-screen">
       <Navigation />
       <main
-        className="container box-border p-2 space-y-4"
+        className="container box-border p-2 space-y-4 "
         style={{ maxWidth: "750px" }}
       >
         <Title>Create an Account</Title>

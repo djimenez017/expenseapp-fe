@@ -4,7 +4,7 @@ import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
-
+import Submit from "../forms/formComponents/Submit";
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
     $name: String
@@ -140,7 +140,7 @@ export default function AddExpense() {
             Due date
           </Input>
 
-          <Button type="Submit">Add Expense</Button>
+          <Submit />
         </div>
       </form>
     </>

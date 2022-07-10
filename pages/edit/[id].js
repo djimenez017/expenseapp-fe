@@ -9,6 +9,7 @@ import Title from "../../components/UI/Title";
 import Input from "../../components/forms/formComponents/input";
 import Select from "../../components/forms/formComponents/Select";
 import Footer from "../../components/Navigation/footer";
+import Submit from "../../components/forms/formComponents/Submit";
 
 const GET_SINGLE_EXPENSE = gql`
   query getSingleExpense($ID: ID) {
@@ -76,6 +77,7 @@ export default function SingleExpense() {
     const date = e.target.value;
     const dateEntered = new Date(date);
     setUDate(dateEntered.toISOString());
+    console.log(dateEntered);
   };
 
   return (
@@ -143,7 +145,7 @@ export default function SingleExpense() {
             >
               Due Date
             </Input>
-            <Button type="Submit">Update Expense</Button>
+            <Submit />
           </form>
         </main>
         <Footer />

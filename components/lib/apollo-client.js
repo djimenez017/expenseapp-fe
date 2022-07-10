@@ -6,7 +6,7 @@ const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_PROD_BE,
 });
 
-const authLink = setContext((_, { headers }) => {
+const authLink = setContext((_, { headers, ...context }) => {
   // get the authentication token from local storage if it exists
   const token = localStorage.getItem("token");
   // return the headers to the context so httpLink can read them
@@ -18,6 +18,7 @@ const authLink = setContext((_, { headers }) => {
       // "Access-Control-Allow-Origin": "*",
       // "Access-Control-Allow-Credentials": true,
     },
+    ...context,
   };
 });
 

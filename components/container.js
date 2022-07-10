@@ -59,10 +59,7 @@ export default function Container(props) {
       ></button>
       <UserInfo />
       <div className="flex flex-col">
-        <Button>
-          {" "}
-          <Link href={`/addExpense`}>Add Expense </Link>
-        </Button>
+        <Button to="addExpense">Add Expense</Button>
       </div>
       <div className="w-300px space-y-10">{expensesData}</div>
     </main>
