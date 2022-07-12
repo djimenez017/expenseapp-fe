@@ -65,8 +65,6 @@ export default function SingleExpense() {
   if (updateLoading) return <p>Updating</p>;
   if (updatedData) router.push("/dashboard");
 
-  console.table(inputs);
-
   if (inputs.dateDue) {
     let formattedDate;
     const dateEntered = new Date(inputs.dateDue);
@@ -77,7 +75,6 @@ export default function SingleExpense() {
     const date = e.target.value;
     const dateEntered = new Date(date);
     setUDate(dateEntered.toISOString());
-    console.log(dateEntered);
   };
 
   return (

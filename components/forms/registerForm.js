@@ -24,6 +24,25 @@ const REGISTER_MUTATION = gql`
   }
 `;
 
+const GET_USER_EXPENSES = gql`
+  query expenses {
+    expenses {
+      id
+      author {
+        fullName
+        id
+        username
+        emailAddress
+      }
+      name
+      amount
+      frequency
+      dateDue
+      expenseAuthor
+    }
+  }
+`;
+
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,15 +82,14 @@ export default function RegisterForm() {
     setPassword("");
   };
 
-  const [registerMutation, { data, loading, error }] =
-    useMutation(REGISTER_MUTATION);
+  const [registerMutation, { data, loading, error }] = useMutation(
+    REGISTER_MUTATION,
+    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
+  );
 
   if (loading) return "Creating Profile";
   if (data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
-
-  console.log(name, email, username, password);
-  console.log(error);
 
   return (
     <>
