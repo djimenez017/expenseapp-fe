@@ -32,9 +32,9 @@ export default function Home() {
       <main className="flex">
         <div className="bg-white md:p-10 text-xl md:flex ">
           <div className="md:w-1/2 md:p-10">
-            <h2 className="text-lg">
-              <Link href={`/`}>Expense Tracker</Link>
-            </h2>{" "}
+            <h1 className="text-lg">
+            Expense Tracker
+            </h1>
             <br />
             <p>
               Track your expenses using this Full-Stack application build using

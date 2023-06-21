@@ -3,6 +3,7 @@ import formatMoney from "../lib/formatMoney";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import formatDate from "../lib/formatDate";
 
 const DELETE_EXPENSE = gql`
   mutation DeleteExpense($ID: Int) {
@@ -38,11 +39,18 @@ export default function ExpenseCard(props) {
     .map((word) => word[0])
     .join("");
 
-  const date = new Date();
-  const thisDay = new Date(props.dateDue).getDate() + 1;
-  const thisYear = date.getFullYear();
-  const thisMonth = date.getMonth() + 2;
-  const dueDate = ` ${thisMonth}/${thisDay}/${thisYear}`;
+  console.log(props.dateDue, props.frequency);
+  // const date = new Date();
+  // const thisDay = new Date(props.dateDue).getDate() + 1;
+  // const thisYear = date.getFullYear();
+  // const thisMonth = date.getMonth() + 2;
+  // const dueDate = ` ${thisMonth}/${thisDay}/${thisYear}`;
+  //console.log(props.dateDue)
+
+  const nextPayment = formatDate(props.frequency, new Date(props.dateDue));
+  // console.log(formatDate("WEEKLY", new Date("2022-07-24T00:00:00.000Z")))
+  // console.log(new Date(props.dateDue).toISOString())
+  // console.log("this is the next payment" + new Date(nextPayment))
 
   const deleteHandler = (e) => {
     e.preventDefault();
@@ -80,7 +88,7 @@ export default function ExpenseCard(props) {
             {formatMoney(props.amount)}/{props.frequency}
           </p>
         </div>
-        <p>Due Date:{dueDate}</p>
+        <p>Due Date:{new Date(nextPayment).toISOString()}</p>
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">

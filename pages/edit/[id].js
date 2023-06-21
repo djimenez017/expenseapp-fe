@@ -69,6 +69,7 @@ export default function SingleExpense() {
     let formattedDate;
     const dateEntered = new Date(inputs.dateDue);
     formattedDate = dateEntered.toISOString().split("T")[0];
+
   }
 
   const dateHandler = (e) => {
