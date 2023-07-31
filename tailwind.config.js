@@ -25,3 +25,9 @@ module.exports = {
   },
   plugins: [],
 };
+
+// --burnt-sienna: #ec7357ff;
+// --apple-green: #72b01dff;
+// --black-olive: #343633ff;
+// --white: #ffffffff;
+// --cadet-gray: #a5b5bfff;
