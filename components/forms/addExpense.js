@@ -56,6 +56,7 @@ export default function AddExpense() {
   const amountHandler = (e) => {
     const stringToInt = parseInt(e.target.value);
     setExpenseAmount(stringToInt);
+    console.log(e.target.value);
   };
 
   const dateHandler = (e) => {
