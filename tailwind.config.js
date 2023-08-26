@@ -11,13 +11,14 @@ module.exports = {
       xl: "1440px",
     },
     colors: {
-      grey: "#595959",
-      blue: "#009FB7",
-      white: "#F2F2F2",
-      dark: "#0B0033",
-      green1: "#84C318",
-      yellow: "#ecc93b",
-      red: "#d9282a",
+      // grey: "#595959",
+      // blue: "#009FB7",
+      // white: "#F2F2F2",
+      orange: "#ec7357ff;",
+      green: "#72b01dff",
+      black: "#343633ff",
+      white: "#ffffff",
+      gray: "#a5b5bfff",
     },
     container: {
       center: true,
@@ -25,9 +26,3 @@ module.exports = {
   },
   plugins: [],
 };
-
-// --burnt-sienna: #ec7357ff;
-// --apple-green: #72b01dff;
-// --black-olive: #343633ff;
-// --white: #ffffffff;
-// --cadet-gray: #a5b5bfff;
