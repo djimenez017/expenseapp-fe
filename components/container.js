@@ -28,7 +28,9 @@ const GET_USER_EXPENSES = gql`
 export default function Container(props) {
   const router = useRouter();
 
-  const { loading, error, data } = useQuery(GET_USER_EXPENSES);
+  const { loading, error, data } = useQuery(GET_USER_EXPENSES, {
+    refetchQueries: [{ query: GET_USER_EXPENSES }],
+  });
 
   if (loading) return "Getting Data...";
   if (!data) router.push("/addExpense");

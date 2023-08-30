@@ -3,8 +3,7 @@ import LoginForm from "../components/forms/loginForm";
 import Button from "../components/button";
 import { gql } from "@apollo/client";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import Submit from "../components/forms/formComponents/Submit";
+import Image from "next/image";
 
 const GET_USERS = gql`
   query get_all_users {
@@ -32,16 +31,22 @@ export default function Home() {
       <main className="flex">
         <div className="bg-white md:p-10 text-xl md:flex ">
           <div className="md:w-1/2 md:p-10">
-            <h1 className="text-lg">
-            Expense Tracker
-            </h1>
+            <h1 className="text-4xl text-bold">Expense Tracker</h1>
             <br />
-            <p>
+            <p className="hidden md:block">
               Track your expenses using this Full-Stack application build using
               NextJS, Tailwind CSS, GraphQL, ApolloJS, PrismaJS, and PostgreSQL.{" "}
-              <br /> <br />
-              Sign up or login to track your expenses!
             </p>
+            <br />{" "}
+            <div className="flex justify-center items-center">
+              <Image
+                src="/../public/assets/Savings-bro.svg"
+                alt="Keep track of your expenses"
+                width={150}
+                height={150}
+                className="mx-auto block"
+              />
+            </div>
           </div>
           <div className="md:w-1/2 md:p-10 ">
             <LoginForm />

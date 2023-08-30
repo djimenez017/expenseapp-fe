@@ -8,7 +8,7 @@ export default function input(props) {
         <input
           id={props.id}
           onChange={props.onChange}
-          className="p-2 w-full"
+          className="appearance-none border-2 border-gray rounded w-full py-2 px-4 text-black leading-tight focus:outline-none focus:bg-white focus:border-green"
           value={props.value}
           type={props.type}
           name={props.name}

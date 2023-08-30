@@ -39,18 +39,7 @@ export default function ExpenseCard(props) {
     .map((word) => word[0])
     .join("");
 
-  console.log(props.dateDue, props.frequency);
-  // const date = new Date();
-  // const thisDay = new Date(props.dateDue).getDate() + 1;
-  // const thisYear = date.getFullYear();
-  // const thisMonth = date.getMonth() + 2;
-  // const dueDate = ` ${thisMonth}/${thisDay}/${thisYear}`;
-  //console.log(props.dateDue)
-
   const nextPayment = formatDate(props.frequency, new Date(props.dateDue));
-  // console.log(formatDate("WEEKLY", new Date("2022-07-24T00:00:00.000Z")))
-  // console.log(new Date(props.dateDue).toISOString())
-  // console.log("this is the next payment" + new Date(nextPayment))
 
   const deleteHandler = (e) => {
     e.preventDefault();
@@ -68,11 +57,10 @@ export default function ExpenseCard(props) {
 
   if (loading) return <p>Deleting Expense</p>;
   if (error) return `Deletion Error ${error.message}`;
-  //(data);
 
   return (
     <div
-      className="flex  bg-green shadow-lg md:flex-row flex-col"
+      className="flex bg-white shadow-md md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
       <div className=" md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green rounded-l-lg hidden">
@@ -93,7 +81,7 @@ export default function ExpenseCard(props) {
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
         <Link href={`/edit/${props.id}`} passHref>
-          <button className=" bg-gray md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
+          <button className=" bg-green text-white md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
             Edit
           </button>
         </Link>

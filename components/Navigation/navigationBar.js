@@ -2,7 +2,7 @@ import React from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-export default function NavigationBar() {
+export default function NavigationBar(props) {
   const router = useRouter();
 
   const signout = () => {
@@ -11,17 +11,12 @@ export default function NavigationBar() {
   };
 
   return (
-    <div className="flex flex-row justify-between content-center items-center py-2 w-full bg-green  px-2 fixed top-0 left-0 right-0">
-      <h1 className="text-white text-2xl font-bold ">
+    <div className="flex flex-row md:justify-around justify-between content-center items-center py-3 px-3 w-full bg-white shadow-md">
+      <h1 className="text-green text-2xl font-bold transition duration-300 ease-in-out hover:text-orange ">
         <Link href={"/"}>ExpenseApp</Link>
       </h1>
       <ol className="flex flex-row justify-end">
-        <li className="px-2 text-white font-bold">
-          <button>
-            <Link href="/dashboard">Dashboard</Link>
-          </button>
-        </li>
-        <li className="px-2 text-white font-bold">
+        <li className="px-2 text-green font-bold transition duration-300 ease-in-out hover:text-orange">
           <button onClick={signout}>Log Out</button>
         </li>
       </ol>

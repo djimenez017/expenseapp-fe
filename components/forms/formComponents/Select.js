@@ -8,7 +8,9 @@ export default function Select(props) {
         <select
           name={props.name}
           id={props.id}
-          className={"p-2 w-full"}
+          className={
+            "appearance-none border-2 border-gray rounded w-full py-2 text-black leading-tight focus:outline-none focus:bg-white focus:border-green"
+          }
           onChange={props.onChange}
         >
           <option value="DAILY">Daily</option>

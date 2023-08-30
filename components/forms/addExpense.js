@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import Button from "../button";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
 import Submit from "../forms/formComponents/Submit";
+
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
     $name: String
@@ -56,7 +56,12 @@ export default function AddExpense() {
   const amountHandler = (e) => {
     const stringToInt = parseInt(e.target.value);
     setExpenseAmount(stringToInt);
-    console.log(e.target.value);
+    console.log(
+      e.target.value.toLocaleString("es-EC", {
+        style: "currency",
+        currency: "USD",
+      })
+    );
   };
 
   const dateHandler = (e) => {
