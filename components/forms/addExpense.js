@@ -8,7 +8,7 @@ import Submit from "../forms/formComponents/Submit";
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
     $name: String
-    $amount: Int
+    $amount: Float
     $frequency: Frequency
     $dateDue: DateTime
   ) {
@@ -54,14 +54,8 @@ export default function AddExpense() {
   };
 
   const amountHandler = (e) => {
-    const stringToInt = parseInt(e.target.value);
+    const stringToInt = parseFloat(e.target.value);
     setExpenseAmount(stringToInt);
-    console.log(
-      e.target.value.toLocaleString("es-EC", {
-        style: "currency",
-        currency: "USD",
-      })
-    );
   };
 
   const dateHandler = (e) => {
@@ -123,6 +117,9 @@ export default function AddExpense() {
             onChange={amountHandler}
             type="number"
             name="amount"
+            placeholder="0.00"
+            step="0.01"
+            pattern="\d+(\.\d{1,2})?"
           >
             Amount
           </Input>

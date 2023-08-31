@@ -3,8 +3,7 @@ import { gql, useQuery } from "@apollo/client";
 import UserInfo from "./dashboard/userInfo";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
-import Link from "next/link";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 
 const GET_USER_EXPENSES = gql`
   query expenses {

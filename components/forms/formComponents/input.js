@@ -12,6 +12,9 @@ export default function input(props) {
           value={props.value}
           type={props.type}
           name={props.name}
+          placeholder={props.placeholder}
+          step={props.step}
+          pattern={props.pattern}
           required
         />
       </label>

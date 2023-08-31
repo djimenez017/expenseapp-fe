@@ -4,6 +4,7 @@ import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import formatDate from "../lib/formatDate";
+import formatDateExtension from "../lib/formatDateExtension";
 
 const DELETE_EXPENSE = gql`
   mutation DeleteExpense($ID: Int) {
@@ -60,12 +61,12 @@ export default function ExpenseCard(props) {
 
   return (
     <div
-      className="flex bg-white shadow-md md:flex-row flex-col"
+      className="flex bg-white shadow-lg  md:flex-row flex-col"
       style={{ maxWidth: "750px" }}
     >
       <div className=" md:w-2/12 md:text-center md:flex items-center content-center justify-items-center bg-green rounded-l-lg hidden">
         <div className="w-full h-max ">
-          <h3 className="text-3xl font-bold ">{initials}</h3>
+          <h3 className="text-3xl font-bold text-white">{initials}</h3>
         </div>
       </div>
 
@@ -73,15 +74,26 @@ export default function ExpenseCard(props) {
         <div className="flex justify-between md:flex-row flex-col text-left ">
           <h3 className="text-3xl font-bold">{props.name}</h3>
           <p className="text-l font-bold">
-            {formatMoney(props.amount)}/{props.frequency}
+            <span className="text-orange text-md">${props.amount} </span>
+            {props.frequency}
           </p>
         </div>
-        <p>Due Date:{new Date(nextPayment).toISOString()}</p>
+        <p>
+          Due{" "}
+          <span className="text-orange text-md">
+            {props.frequency.toLowerCase()}
+          </span>{" "}
+          every{" "}
+          <span className="text-orange text-md">
+            {formatDateExtension(nextPayment.getDate() + 1)}
+          </span>
+        </p>
+        {/* <p>Due Date:{nextPayment.toISOString()}</p> */}
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
         <Link href={`/edit/${props.id}`} passHref>
-          <button className=" bg-green text-white md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
+          <button className=" bg-green text-white md:w-full h-full py-3 md:py-4 w-1/2  md:rounded-tr-lg">
             Edit
           </button>
         </Link>
