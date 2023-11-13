@@ -4,6 +4,7 @@ import Button from "../components/button";
 import { gql } from "@apollo/client";
 import { useRouter } from "next/router";
 import Image from "next/image";
+import PiggyBank from "../public/assets/Savings-bro.svg";
 
 const GET_USERS = gql`
   query get_all_users {
@@ -40,7 +41,7 @@ export default function Home() {
             <br />{" "}
             <div className="flex justify-center items-center">
               <Image
-                src="/../public/assets/Savings-bro.svg"
+                src={PiggyBank}
                 alt="Keep track of your expenses"
                 width={150}
                 height={150}

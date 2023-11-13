@@ -50,10 +50,10 @@ export default function LoginForm() {
 
   if (loading) return "Submitting...";
   if (data) router.push("/dashboard");
-  if (error) return `Submission error! ${error.message}`;
 
   return (
     <div>
+      {error && <p> {error.message}</p>}
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
           <Input
