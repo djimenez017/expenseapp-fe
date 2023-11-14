@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import formatDate from "../lib/formatDate";
 import formatDateExtension from "../lib/formatDateExtension";
+import Loading from "../UI/Loading";
 
 const DELETE_EXPENSE = gql`
   mutation DeleteExpense($ID: Int) {
@@ -56,7 +57,7 @@ export default function ExpenseCard(props) {
     { refetchQueries: [{ query: GET_USER_EXPENSES }] }
   );
 
-  if (loading) return <p>Deleting Expense</p>;
+  if (loading) return <Loading />;
   if (error) return `Deletion Error ${error.message}`;
 
   return (

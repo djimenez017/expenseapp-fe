@@ -9,6 +9,7 @@ import Input from "../../components/forms/formComponents/input";
 import Select from "../../components/forms/formComponents/Select";
 import Footer from "../../components/Navigation/footer";
 import Submit from "../../components/forms/formComponents/Submit";
+import Loading from "../../components/UI/Loading";
 
 const GET_SINGLE_EXPENSE = gql`
   query getSingleExpense($ID: ID) {
@@ -60,7 +61,7 @@ export default function SingleExpense() {
 
   const { inputs, handleChange, resetForm, clearForm } = useForm(data?.expense);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Loading />;
   if (updateLoading) return <p>Updating</p>;
   if (updatedData) router.push("/dashboard");
 

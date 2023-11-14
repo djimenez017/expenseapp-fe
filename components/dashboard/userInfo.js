@@ -1,6 +1,7 @@
 import React from "react";
 import { gql, useQuery } from "@apollo/client";
 import Session from "../hoc/session";
+import Loading from "../UI/Loading";
 
 const GET_CURRENT_USER = gql`
   query currentUser {
@@ -22,7 +23,7 @@ export default function UserInfo() {
     refetchQueries: [{ query: GET_CURRENT_USER }],
   });
 
-  if (loading) return <p>Fetching User</p>;
+  if (loading) return <Loading />;
   if (error) return <p>Error</p>;
 
   const { fullName } = data.currentUser;

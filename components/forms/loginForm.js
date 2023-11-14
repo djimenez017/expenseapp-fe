@@ -3,6 +3,7 @@ import Submit from "../forms/formComponents/Submit";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
+import Loading from "../UI/Loading";
 
 const LOG_IN_MUTATION = gql`
   mutation LogInMutation($username: String!, $password: String!) {
@@ -48,14 +49,18 @@ export default function LoginForm() {
     }
   );
 
-  if (loading) return "Submitting...";
+  if (loading) return <Loading />;
   if (data) router.push("/dashboard");
 
   return (
     <div>
-      {error && <p> {error.message}</p>}
+      {error && (
+        <div className="text-red-700 bg-red-200">
+          <p>{error.message}</p>
+        </div>
+      )}
       <form onSubmit={onSubmitHandler}>
-        <div className="my-5">
+        <div className="my-2">
           <Input
             htmlFor="username"
             id="username"

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { gql, useMutation } from "@apollo/client";
 import Input from "../forms/formComponents/input";
 import Submit from "../forms/formComponents/Submit";
+import Loading from "../UI/Loading";
 
 const REGISTER_MUTATION = gql`
   mutation RegisterMutation(
@@ -87,7 +88,7 @@ export default function RegisterForm() {
     { refetchQueries: [{ query: GET_USER_EXPENSES }] }
   );
 
-  if (loading) return "Creating Profile";
+  if (loading) return <Loading
   if (data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 

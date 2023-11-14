@@ -29,8 +29,8 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex">
-        <div className="bg-white md:p-10 text-xl md:flex ">
+      <main className="flex ">
+        <div className="bg-white md:p-10 text-xl md:flex items-center ">
           <div className="md:w-1/2 md:p-10">
             <h1 className="text-4xl text-bold">Expense Tracker</h1>
             <br />

@@ -4,6 +4,7 @@ import UserInfo from "./dashboard/userInfo";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
 import { useRouter } from "next/router";
+import Loading from "./UI/Loading";
 
 const GET_USER_EXPENSES = gql`
   query expenses {
@@ -31,7 +32,7 @@ export default function Container(props) {
     refetchQueries: [{ query: GET_USER_EXPENSES }],
   });
 
-  if (loading) return "Getting Data...";
+  if (loading) return <Loading />;
   if (!data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 

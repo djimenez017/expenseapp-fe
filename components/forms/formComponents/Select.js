@@ -9,7 +9,7 @@ export default function Select(props) {
           name={props.name}
           id={props.id}
           className={
-            "appearance-none border-2 border-gray rounded w-full py-2 text-black leading-tight focus:outline-none focus:bg-white focus:border-green"
+            "appearance-none border-2 border-gray rounded w-full px-4 py-2  text-black leading-tight focus:outline-none focus:bg-white focus:border-green"
           }
           onChange={props.onChange}
         >
