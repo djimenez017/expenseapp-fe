@@ -88,7 +88,7 @@ export default function RegisterForm() {
     { refetchQueries: [{ query: GET_USER_EXPENSES }] }
   );
 
-  if (loading) return <Loading
+  if (loading) return <Loading />;
   if (data) router.push("/addExpense");
   if (error) return `Submission error! ${error.message}`;
 
