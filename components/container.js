@@ -57,6 +57,8 @@ export default function Container(props) {
       <UserInfo />
       <div className="flex flex-col">
         <Button to="addExpense">Add Expense</Button>
+        <br />
+        <Button to="/details">More Details</Button>
       </div>
       <div className="w-300px space-y-10">{expensesData}</div>
     </main>
