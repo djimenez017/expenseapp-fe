@@ -90,7 +90,7 @@ export default function AddExpense() {
     { refetchQueries: [{ query: GET_USER_EXPENSES }] }
   );
 
-  if (loading) return <Loading
+  if (loading) return <Loading />;
   if (data) router.push("/dashboard");
   if (error) return `Submission error! ${error.message}`;
 
