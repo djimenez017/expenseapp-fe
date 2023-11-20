@@ -63,10 +63,10 @@ export default function Details() {
           <UserInfo />
           <Button to="/dashboard">Back to Dashboard</Button>
           <div className="flex md:justify-between flex-wrap space-around">
-            <Tile frequency="Daily" amount={dailyAmount} />
-            <Tile frequency="Weekly" amount={weeklyAmount} />
-            <Tile frequency="Monthly" amount={monthlyAmount} />
-            <Tile frequency="Yearly" amount={yearlyAmount} />
+            <Tile frequency="Daily" amount={dailyAmount.toFixed(2)} />
+            <Tile frequency="Weekly" amount={weeklyAmount.toFixed(2)} />
+            <Tile frequency="Monthly" amount={monthlyAmount.toFixed(2)} />
+            <Tile frequency="Yearly" amount={yearlyAmount.toFixed(2)} />
           </div>
         </div>
         <Footer />

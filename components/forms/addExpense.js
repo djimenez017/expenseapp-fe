@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
 import Submit from "../forms/formComponents/Submit";
+import Loading from "../UI/Loading";
 
 const ADD_EXPENSE_MUTATION = gql`
   mutation createExpense(
@@ -89,7 +90,7 @@ export default function AddExpense() {
     { refetchQueries: [{ query: GET_USER_EXPENSES }] }
   );
 
-  if (loading) return <p>Expense Added!!</p>;
+  if (loading) return <Loading
   if (data) router.push("/dashboard");
   if (error) return `Submission error! ${error.message}`;
 
