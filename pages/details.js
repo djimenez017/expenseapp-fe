@@ -6,6 +6,7 @@ import Loading from "../components/UI/Loading";
 import UserInfo from "../components/dashboard/userInfo";
 import Tile from "../components/UI/Tile";
 import Button from "../components/button";
+import YearlyTotal from "../components/UI/YearlyTotal";
 
 const GET_USER_EXPENSES = gql`
   query expenses {
@@ -68,7 +69,14 @@ export default function Details() {
             <Tile frequency="Monthly" amount={monthlyAmount.toFixed(2)} />
             <Tile frequency="Yearly" amount={yearlyAmount.toFixed(2)} />
           </div>
+          <YearlyTotal
+            dailyAmount={dailyAmount}
+            weeklyAmount={weeklyAmount}
+            monthlyAmount={monthlyAmount}
+            yearlyAmount={yearlyAmount}
+          />
         </div>
+
         <Footer />
       </div>
     </Session>
