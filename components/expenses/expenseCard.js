@@ -1,64 +1,34 @@
 import React, { useState } from "react";
-import formatMoney from "../lib/formatMoney";
-import { gql, useMutation } from "@apollo/client";
-import { useRouter } from "next/router";
-import Link from "next/link";
 import formatDate from "../lib/formatDate";
+import Link from "next/link";
 import formatDateExtension from "../lib/formatDateExtension";
 import Loading from "../UI/Loading";
-
-const DELETE_EXPENSE = gql`
-  mutation DeleteExpense($ID: Int) {
-    deleteExpense(ID: $ID) {
-      name
-    }
-  }
-`;
-
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
+import { deleteExpense } from "../lib/expenses";
 
 export default function ExpenseCard(props) {
-  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
   const initials = props.name
     .split(" ")
     .map((word) => word[0])
     .join("");
 
-  const nextPayment = formatDate(props.frequency, new Date(props.dateDue));
+  const nextPayment = formatDate(props.frequency, props.dateDue);
 
-  const deleteHandler = (e) => {
+  const deleteHandler = async (e) => {
     e.preventDefault();
-    deleteExpense({
-      variables: {
-        ID: parseInt(props.id),
-      },
-    });
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteExpense(props.id);
+      if (props.onDeleted) await props.onDeleted();
+    } catch (err) {
+      setError(err.message);
+      setDeleting(false);
+    }
   };
 
-  const [deleteExpense, { data, loading, error }] = useMutation(
-    DELETE_EXPENSE,
-    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
-  );
-
-  if (loading) return <Loading />;
-  if (error) return `Deletion Error ${error.message}`;
+  if (deleting) return <Loading />;
 
   return (
     <div
@@ -75,7 +45,9 @@ export default function ExpenseCard(props) {
         <div className="flex justify-between md:flex-row flex-col text-left ">
           <h3 className="text-3xl font-bold">{props.name}</h3>
           <p className="text-l font-bold">
-            <span className="text-orange text-md">${props.amount} </span>
+            <span className="text-orange text-md">
+              ${Number(props.amount).toFixed(2)}{" "}
+            </span>
             {props.frequency}
           </p>
         </div>
@@ -86,10 +58,10 @@ export default function ExpenseCard(props) {
           </span>{" "}
           every{" "}
           <span className="text-orange text-md">
-            {formatDateExtension(nextPayment.getDate() + 1)}
+            {formatDateExtension(nextPayment.getDate())}
           </span>
         </p>
-        {/* <p>Due Date:{nextPayment.toISOString()}</p> */}
+        {error && <p className="text-red-700">{error}</p>}
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">

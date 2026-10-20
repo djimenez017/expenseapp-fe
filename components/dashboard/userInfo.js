@@ -1,44 +1,35 @@
-import React from "react";
-import { gql, useQuery } from "@apollo/client";
-import Session from "../hoc/session";
+import React, { useEffect, useState } from "react";
 import Loading from "../UI/Loading";
-
-const GET_CURRENT_USER = gql`
-  query currentUser {
-    currentUser {
-      username
-      fullName
-      id
-      emailAddress
-      expenses {
-        name
-        id
-      }
-    }
-  }
-`;
+import { fetchProfile } from "../lib/expenses";
 
 export default function UserInfo() {
-  const { loading, data, error } = useQuery(GET_CURRENT_USER, {
-    refetchQueries: [{ query: GET_CURRENT_USER }],
-  });
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState("");
 
-  if (loading) return <Loading />;
+  useEffect(() => {
+    let active = true;
+    fetchProfile()
+      .then((row) => {
+        if (active) setProfile(row);
+      })
+      .catch((err) => {
+        if (active) setError(err.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   if (error) return <p>Error</p>;
-
-  const { fullName } = data.currentUser;
+  if (!profile) return <Loading />;
 
   return (
-    <Session>
-      <div className="bg-white py-5">
-        <h1 className="text-grey text-4xl font-bold">{fullName}</h1>
-        <p className="py-2 font-bold text-lg">
-          Total Expenses:{" "}
-          <span className="text-orange text-2xl">
-            {data.currentUser.expenses.length}
-          </span>
-        </p>
-      </div>
-    </Session>
+    <div className="bg-white py-5">
+      <h1 className="text-grey text-4xl font-bold">{profile.fullName}</h1>
+      <p className="py-2 font-bold text-lg">
+        Total Expenses:{" "}
+        <span className="text-orange text-2xl">{profile.expenseCount}</span>
+      </p>
+    </div>
   );
 }

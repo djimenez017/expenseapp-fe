@@ -1,53 +1,30 @@
-/* eslint-disable @next/next/link-passhref */
-import { gql, useQuery } from "@apollo/client";
+import { useCallback, useEffect, useState } from "react";
 import UserInfo from "./dashboard/userInfo";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
-import { useRouter } from "next/router";
 import Loading from "./UI/Loading";
+import { fetchExpenses } from "./lib/expenses";
 
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
+export default function Container() {
+  const [expenses, setExpenses] = useState(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const rows = await fetchExpenses();
+      setExpenses(rows);
+      setError("");
+    } catch (err) {
+      setError(err.message);
     }
-  }
-`;
+  }, []);
 
-export default function Container(props) {
-  const router = useRouter();
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const { loading, error, data } = useQuery(GET_USER_EXPENSES, {
-    refetchQueries: [{ query: GET_USER_EXPENSES }],
-  });
-
-  if (loading) return <Loading />;
-  if (!data) router.push("/addExpense");
-  if (error) return `Submission error! ${error.message}`;
-
-  const expensesData = data.expenses.map((expense) => {
-    return (
-      <ExpenseCard
-        key={expense.id}
-        name={expense.name}
-        amount={expense.amount}
-        frequency={expense.frequency}
-        dateDue={expense.dateDue}
-        id={expense.id}
-      ></ExpenseCard>
-    );
-  });
+  if (error) return <p className="text-red-700 bg-red-200 p-2">{error}</p>;
+  if (!expenses) return <Loading />;
 
   return (
     <main
@@ -60,7 +37,23 @@ export default function Container(props) {
         <br />
         <Button to="/details">More Details</Button>
       </div>
-      <div className="w-300px space-y-10">{expensesData}</div>
+      {expenses.length === 0 ? (
+        <p>You have no expenses yet.</p>
+      ) : (
+        <div className="w-300px space-y-10">
+          {expenses.map((expense) => (
+            <ExpenseCard
+              key={expense.id}
+              name={expense.name}
+              amount={expense.amount}
+              frequency={expense.frequency}
+              dateDue={expense.dateDue}
+              id={expense.id}
+              onDeleted={load}
+            />
+          ))}
+        </div>
+      )}
     </main>
   );
 }

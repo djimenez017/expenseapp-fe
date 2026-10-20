@@ -1,12 +1,13 @@
 import React from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { supabase } from "../lib/supabase";
 
-export default function NavigationBar(props) {
+export default function NavigationBar() {
   const router = useRouter();
 
-  const signout = () => {
-    localStorage.clear();
+  const signout = async () => {
+    if (supabase) await supabase.auth.signOut();
     router.push("/");
   };
 

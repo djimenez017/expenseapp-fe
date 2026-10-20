@@ -1,106 +1,92 @@
 import React, { useState } from "react";
-import Button from "../button";
 import { useRouter } from "next/router";
-import { gql, useMutation } from "@apollo/client";
 import Input from "../forms/formComponents/input";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
-
-const REGISTER_MUTATION = gql`
-  mutation RegisterMutation(
-    $fullName: String!
-    $emailAddress: String!
-    $username: String!
-    $password: String!
-  ) {
-    register(
-      fullName: $fullName
-      emailAddress: $emailAddress
-      username: $username
-      password: $password
-    ) {
-      fullName
-      username
-    }
-  }
-`;
-
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
+import Button from "../button";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const router = useRouter();
 
-  const nameHandler = (e) => {
-    setName(e.target.value);
-  };
-
-  const emailHandler = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const usernameHandler = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const passwordHandler = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
-    registerMutation({
-      variables: {
-        fullName: name,
-        emailAddress: email,
-        username: username,
-        password: password,
+    setError("");
+
+    if (!supabase) {
+      setError("Supabase is not configured.");
+      return;
+    }
+
+    setLoading(true);
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: name.trim(),
+          username: username.trim(),
+        },
       },
     });
-    setName("");
-    setEmail("");
-    setUsername("");
-    setPassword("");
+    setLoading(false);
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
+    if (data.session) {
+      router.push("/addExpense");
+      return;
+    }
+
+    setNeedsConfirmation(true);
   };
 
-  const [registerMutation, { data, loading, error }] = useMutation(
-    REGISTER_MUTATION,
-    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
-  );
-
   if (loading) return <Loading />;
-  if (data) router.push("/addExpense");
-  if (error) return `Submission error! ${error.message}`;
+
+  if (needsConfirmation) {
+    return (
+      <div className="space-y-4">
+        <p>
+          Check your email to confirm your account. After you confirm, log in
+          to add an expense.
+        </p>
+        <Button to="/">Back to login</Button>
+      </div>
+    );
+  }
 
   return (
     <>
+      {!isSupabaseConfigured && (
+        <div className="text-red-700 bg-red-200 p-2 mb-2">
+          <p>
+            Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            then run supabase/schema.sql in the Supabase SQL editor.
+          </p>
+        </div>
+      )}
+      {error && (
+        <div className="text-red-700 bg-red-200 p-2 mb-2">
+          <p>{error}</p>
+        </div>
+      )}
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
           <Input
             htmlFor="name"
             id="name"
             name="name"
-            onChange={nameHandler}
+            onChange={(e) => setName(e.target.value)}
             type="text"
             value={name}
             required
@@ -111,7 +97,7 @@ export default function RegisterForm() {
             htmlFor="email"
             id="email"
             name="email"
-            onChange={emailHandler}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             value={email}
             required
@@ -122,7 +108,7 @@ export default function RegisterForm() {
             htmlFor="username"
             id="username"
             name="username"
-            onChange={usernameHandler}
+            onChange={(e) => setUsername(e.target.value)}
             type="text"
             value={username}
             required
@@ -133,7 +119,7 @@ export default function RegisterForm() {
             htmlFor="password"
             id="password"
             name="password"
-            onChange={passwordHandler}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
             value={password}
             required
