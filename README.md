@@ -15,6 +15,8 @@ Next.js app. Accounts and expenses are stored in Supabase.
 
 4. Under Authentication → Providers → Email, turn **Confirm email** off if a new account should go straight to adding an expense. Leave it on if signup should stop and ask the user to confirm first.
 
+Requires Node.js 22 or newer.
+
 ## Scripts
 
 ```bash

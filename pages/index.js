@@ -1,8 +1,7 @@
 import Head from "next/head";
+import Image from "next/image";
 import LoginForm from "../components/forms/loginForm";
 import Button from "../components/button";
-import Image from "next/image";
-import PiggyBank from "../public/assets/Savings-bro.svg";
 
 export default function Home() {
   return (
@@ -24,11 +23,12 @@ export default function Home() {
             <br />{" "}
             <div className="flex justify-center items-center">
               <Image
-                src={PiggyBank}
+                src="/assets/Savings-bro.svg"
                 alt="Keep track of your expenses"
                 width={150}
                 height={150}
                 className="mx-auto block"
+                unoptimized
               />
             </div>
           </div>

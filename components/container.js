@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import UserInfo from "./dashboard/userInfo";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
@@ -8,20 +8,23 @@ import { fetchExpenses } from "./lib/expenses";
 export default function Container() {
   const [expenses, setExpenses] = useState(null);
   const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    try {
-      const rows = await fetchExpenses();
-      setExpenses(rows);
-      setError("");
-    } catch (err) {
-      setError(err.message);
-    }
-  }, []);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    fetchExpenses()
+      .then((rows) => {
+        if (!active) return;
+        setExpenses(rows);
+        setError("");
+      })
+      .catch((err) => {
+        if (active) setError(err.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
 
   if (error) return <p className="text-red-700 bg-red-200 p-2">{error}</p>;
   if (!expenses) return <Loading />;
@@ -49,7 +52,7 @@ export default function Container() {
               frequency={expense.frequency}
               dateDue={expense.dateDue}
               id={expense.id}
-              onDeleted={load}
+              onDeleted={() => setReloadKey((key) => key + 1)}
             />
           ))}
         </div>

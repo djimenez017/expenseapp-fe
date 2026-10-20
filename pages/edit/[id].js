@@ -28,7 +28,6 @@ function EditForm() {
   useEffect(() => {
     if (!expenseId || Array.isArray(expenseId)) return undefined;
     let active = true;
-    setLoading(true);
     fetchExpense(expenseId)
       .then((expense) => {
         if (!active) return;

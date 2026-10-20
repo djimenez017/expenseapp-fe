@@ -65,10 +65,11 @@ export default function ExpenseCard(props) {
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">
-        <Link href={`/edit/${props.id}`} passHref>
-          <button className=" bg-green text-white md:w-full h-full py-2 md:py-4 w-1/2  md:rounded-tr-lg">
-            Edit
-          </button>
+        <Link
+          href={`/edit/${props.id}`}
+          className="inline-block text-center bg-green text-white md:w-full h-full py-2 md:py-4 w-1/2 md:rounded-tr-lg"
+        >
+          Edit
         </Link>
         <button
           className=" bg-orange md:w-full h-full py-2 md:py-4 text-white w-1/2 rounded-br-lg md:rounded-br-lg"
