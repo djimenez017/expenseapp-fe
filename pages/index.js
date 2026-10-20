@@ -1,26 +1,9 @@
 import Head from "next/head";
+import Image from "next/image";
 import LoginForm from "../components/forms/loginForm";
 import Button from "../components/button";
-import { gql } from "@apollo/client";
-import { useRouter } from "next/router";
-import Image from "next/image";
-import PiggyBank from "../public/assets/Savings-bro.svg";
-
-const GET_USERS = gql`
-  query get_all_users {
-    users {
-      id
-      fullName
-      website
-      emailAddress
-      password
-    }
-  }
-`;
 
 export default function Home() {
-  const router = useRouter();
-
   return (
     <div className="p-3 container flex justify-center items-center h-screen">
       <Head>
@@ -35,17 +18,17 @@ export default function Home() {
             <h1 className="text-4xl text-bold">Expense Tracker</h1>
             <br />
             <p className="hidden md:block">
-              Track your expenses using this Full-Stack application build using
-              NextJS, Tailwind CSS, GraphQL, ApolloJS, PrismaJS, and PostgreSQL.{" "}
+              Track your expenses with Next.js, Tailwind CSS, and Supabase.{" "}
             </p>
             <br />{" "}
             <div className="flex justify-center items-center">
               <Image
-                src={PiggyBank}
+                src="/assets/Savings-bro.svg"
                 alt="Keep track of your expenses"
                 width={150}
                 height={150}
                 className="mx-auto block"
+                unoptimized
               />
             </div>
           </div>

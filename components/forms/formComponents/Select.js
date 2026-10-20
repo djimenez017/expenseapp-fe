@@ -8,6 +8,7 @@ export default function Select(props) {
         <select
           name={props.name}
           id={props.id}
+          value={props.value || "MONTHLY"}
           className={
             "appearance-none border-2 border-gray rounded w-full px-4 py-2  text-black leading-tight focus:outline-none focus:bg-white focus:border-green"
           }
