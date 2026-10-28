@@ -12,7 +12,7 @@ export default function useForm(initial = {}) {
   function handleChange(e) {
     let { value, name, type } = e.target;
     if (type === "number") {
-      value = parseInt(value);
+      value = value === "" ? "" : parseFloat(value);
     }
     setInputs({
       // copy the existing state

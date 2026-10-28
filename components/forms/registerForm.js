@@ -1,106 +1,74 @@
 import React, { useState } from "react";
-import Button from "../button";
 import { useRouter } from "next/router";
-import { gql, useMutation } from "@apollo/client";
 import Input from "../forms/formComponents/input";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
-
-const REGISTER_MUTATION = gql`
-  mutation RegisterMutation(
-    $fullName: String!
-    $emailAddress: String!
-    $username: String!
-    $password: String!
-  ) {
-    register(
-      fullName: $fullName
-      emailAddress: $emailAddress
-      username: $username
-      password: $password
-    ) {
-      fullName
-      username
-    }
-  }
-`;
-
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
+import { supabase } from "../lib/supabase";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const nameHandler = (e) => {
-    setName(e.target.value);
-  };
-
-  const emailHandler = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const usernameHandler = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const passwordHandler = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
-    registerMutation({
-      variables: {
-        fullName: name,
-        emailAddress: email,
-        username: username,
-        password: password,
-      },
-    });
-    setName("");
-    setEmail("");
-    setUsername("");
-    setPassword("");
-  };
+    setError("");
+    setNotice("");
+    setLoading(true);
 
-  const [registerMutation, { data, loading, error }] = useMutation(
-    REGISTER_MUTATION,
-    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
-  );
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            username,
+          },
+        },
+      });
+
+      setLoading(false);
+
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      if (data.session) {
+        router.push("/addExpense");
+        return;
+      }
+
+      setNotice("Check your email to confirm the account, then log in.");
+    } catch (signUpFailure) {
+      setLoading(false);
+      setError(signUpFailure.message || "Could not create the account.");
+    }
+  };
 
   if (loading) return <Loading />;
-  if (data) router.push("/addExpense");
-  if (error) return `Submission error! ${error.message}`;
 
   return (
     <>
+      {error && (
+        <p className="text-orange font-bold mb-2">{error}</p>
+      )}
+      {notice && (
+        <p className="text-green font-bold mb-2">{notice}</p>
+      )}
       <form onSubmit={onSubmitHandler}>
         <div className="my-5">
           <Input
             htmlFor="name"
             id="name"
             name="name"
-            onChange={nameHandler}
+            onChange={(e) => setName(e.target.value)}
             type="text"
             value={name}
             required
@@ -111,7 +79,7 @@ export default function RegisterForm() {
             htmlFor="email"
             id="email"
             name="email"
-            onChange={emailHandler}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             value={email}
             required
@@ -122,7 +90,7 @@ export default function RegisterForm() {
             htmlFor="username"
             id="username"
             name="username"
-            onChange={usernameHandler}
+            onChange={(e) => setUsername(e.target.value)}
             type="text"
             value={username}
             required
@@ -133,7 +101,7 @@ export default function RegisterForm() {
             htmlFor="password"
             id="password"
             name="password"
-            onChange={passwordHandler}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
             value={password}
             required

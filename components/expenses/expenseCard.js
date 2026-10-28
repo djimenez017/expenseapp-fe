@@ -1,41 +1,13 @@
 import React, { useState } from "react";
-import formatMoney from "../lib/formatMoney";
-import { gql, useMutation } from "@apollo/client";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import formatDate from "../lib/formatDate";
 import formatDateExtension from "../lib/formatDateExtension";
 import Loading from "../UI/Loading";
-
-const DELETE_EXPENSE = gql`
-  mutation DeleteExpense($ID: Int) {
-    deleteExpense(ID: $ID) {
-      name
-    }
-  }
-`;
-
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
+import { supabase } from "../lib/supabase";
 
 export default function ExpenseCard(props) {
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const initials = props.name
     .split(" ")
     .map((word) => word[0])
@@ -43,22 +15,27 @@ export default function ExpenseCard(props) {
 
   const nextPayment = formatDate(props.frequency, new Date(props.dateDue));
 
-  const deleteHandler = (e) => {
+  const deleteHandler = async (e) => {
     e.preventDefault();
-    deleteExpense({
-      variables: {
-        ID: parseInt(props.id),
-      },
-    });
+    setLoading(true);
+    setError("");
+
+    const { error: deleteError } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", props.id);
+
+    setLoading(false);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
+    if (props.onDeleted) props.onDeleted();
   };
 
-  const [deleteExpense, { data, loading, error }] = useMutation(
-    DELETE_EXPENSE,
-    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
-  );
-
   if (loading) return <Loading />;
-  if (error) return `Deletion Error ${error.message}`;
 
   return (
     <div
@@ -89,7 +66,7 @@ export default function ExpenseCard(props) {
             {formatDateExtension(nextPayment.getDate() + 1)}
           </span>
         </p>
-        {/* <p>Due Date:{nextPayment.toISOString()}</p> */}
+        {error && <p className="text-red-700">{error}</p>}
       </div>
 
       <div className="md:w-1/12 w-full md:flex-row self-center flex-row h-full">

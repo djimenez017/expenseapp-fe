@@ -1,13 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { supabase } from "../lib/supabase";
+import Loading from "../UI/Loading";
 
-export default function session(props) {
+export default function Session(props) {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
 
-  if (typeof window !== "undefined") {
-    const item = localStorage.getItem("token");
+  useEffect(() => {
+    let active = true;
 
-    if (!item) router.push("/");
-  }
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (!data.session) {
+        router.replace("/");
+        return;
+      }
+      setReady(true);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) router.replace("/");
+      }
+    );
+
+    return () => {
+      active = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  if (!ready) return <Loading />;
+
   return <div>{props.children}</div>;
 }

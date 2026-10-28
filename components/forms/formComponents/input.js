@@ -3,7 +3,7 @@ import React from "react";
 export default function input(props) {
   return (
     <>
-      <label htmlFor={props.htmlFor}>
+      <label htmlFor={props.htmlFor} className="block mb-4">
         {props.children}
         <input
           id={props.id}
@@ -18,8 +18,6 @@ export default function input(props) {
           required
         />
       </label>
-      <br />
-      <br />
     </>
   );
 }

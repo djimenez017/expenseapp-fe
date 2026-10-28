@@ -1,53 +1,35 @@
-/* eslint-disable @next/next/link-passhref */
-import { gql, useQuery } from "@apollo/client";
-import UserInfo from "./dashboard/userInfo";
+import React, { useEffect, useState } from "react";
 import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
-import { useRouter } from "next/router";
 import Loading from "./UI/Loading";
+import UserInfo from "./dashboard/userInfo";
+import { supabase } from "./lib/supabase";
 
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
+export default function Container() {
+  const [expenses, setExpenses] = useState(null);
+  const [error, setError] = useState("");
+
+  const loadExpenses = async () => {
+    const { data, error: queryError } = await supabase
+      .from("expenses")
+      .select("id, name, amount, frequency, date_due")
+      .order("date_due", { ascending: true });
+
+    if (queryError) {
+      setError(queryError.message);
+      setExpenses([]);
+      return;
     }
-  }
-`;
 
-export default function Container(props) {
-  const router = useRouter();
+    setExpenses(data || []);
+  };
 
-  const { loading, error, data } = useQuery(GET_USER_EXPENSES, {
-    refetchQueries: [{ query: GET_USER_EXPENSES }],
-  });
+  useEffect(() => {
+    loadExpenses();
+  }, []);
 
-  if (loading) return <Loading />;
-  if (!data) router.push("/addExpense");
-  if (error) return `Submission error! ${error.message}`;
-
-  const expensesData = data.expenses.map((expense) => {
-    return (
-      <ExpenseCard
-        key={expense.id}
-        name={expense.name}
-        amount={expense.amount}
-        frequency={expense.frequency}
-        dateDue={expense.dateDue}
-        id={expense.id}
-      ></ExpenseCard>
-    );
-  });
+  if (!expenses) return <Loading />;
+  if (error) return `Could not load expenses. ${error}`;
 
   return (
     <main
@@ -60,7 +42,19 @@ export default function Container(props) {
         <br />
         <Button to="/details">More Details</Button>
       </div>
-      <div className="w-300px space-y-10">{expensesData}</div>
+      <div className="w-300px space-y-10">
+        {expenses.map((expense) => (
+          <ExpenseCard
+            key={expense.id}
+            name={expense.name}
+            amount={expense.amount}
+            frequency={expense.frequency}
+            dateDue={expense.date_due}
+            id={expense.id}
+            onDeleted={loadExpenses}
+          />
+        ))}
+      </div>
     </main>
   );
 }

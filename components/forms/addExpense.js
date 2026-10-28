@@ -1,101 +1,58 @@
 import React, { useState } from "react";
-import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
-
-const ADD_EXPENSE_MUTATION = gql`
-  mutation createExpense(
-    $name: String
-    $amount: Float
-    $frequency: Frequency
-    $dateDue: DateTime
-  ) {
-    createExpense(
-      name: $name
-      amount: $amount
-      frequency: $frequency
-      dateDue: $dateDue
-    ) {
-      name
-    }
-  }
-`;
-
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
-      }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
+import { supabase } from "../lib/supabase";
 
 export default function AddExpense() {
   const [expenseName, setExpenseName] = useState("");
-  const [expenseAmount, setExpenseAmount] = useState();
+  const [expenseAmount, setExpenseAmount] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
-  const [expenseFrequency, setExpenseFrequency] = useState("");
+  const [expenseFrequency, setExpenseFrequency] = useState("DAILY");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const nameHandler = (e) => {
-    setExpenseName(e.target.value);
-  };
-
-  const amountHandler = (e) => {
-    const stringToInt = parseFloat(e.target.value);
-    setExpenseAmount(stringToInt);
-  };
-
-  const dateHandler = (e) => {
-    const date = e.target.value;
-    const dateEntered = new Date(date);
-    setExpenseDate(dateEntered.toISOString());
-  };
-
-  const frequencyHandler = (e) => {
-    setExpenseFrequency(e.target.value);
-  };
-
-  const expenseSubmitHandler = (e) => {
+  const expenseSubmitHandler = async (e) => {
     e.preventDefault();
-    addExpense({
-      variables: {
-        name: expenseName,
-        amount: expenseAmount,
-        frequency: expenseFrequency,
-        dateDue: expenseDate,
-      },
-    });
-    setExpenseName("");
-    setExpenseAmount("");
-    setExpenseDate("");
-    setExpenseFrequency("");
-  };
+    setError("");
+    setLoading(true);
 
-  const [addExpense, { data, loading, error }] = useMutation(
-    ADD_EXPENSE_MUTATION,
-    { refetchQueries: [{ query: GET_USER_EXPENSES }] }
-  );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setLoading(false);
+      router.push("/");
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("expenses").insert({
+      user_id: user.id,
+      name: expenseName,
+      amount: parseFloat(expenseAmount),
+      frequency: expenseFrequency,
+      date_due: new Date(`${expenseDate}T00:00:00`).toISOString(),
+    });
+
+    setLoading(false);
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
+    router.push("/dashboard");
+  };
 
   if (loading) return <Loading />;
-  if (data) router.push("/dashboard");
-  if (error) return `Submission error! ${error.message}`;
 
   return (
     <>
+      {error && <p className="text-red-700 bg-red-200">{error}</p>}
       <form
         onSubmit={expenseSubmitHandler}
         autoComplete="off"
@@ -106,8 +63,9 @@ export default function AddExpense() {
             htmlFor="ExpenseName"
             id="ExpenseName"
             required
-            onChange={nameHandler}
+            onChange={(e) => setExpenseName(e.target.value)}
             name="name"
+            value={expenseName}
           >
             Expense Name
           </Input>
@@ -115,9 +73,10 @@ export default function AddExpense() {
             htmlFor="amount"
             id="amount"
             required
-            onChange={amountHandler}
+            onChange={(e) => setExpenseAmount(e.target.value)}
             type="number"
             name="amount"
+            value={expenseAmount}
             placeholder="0.00"
             step="0.01"
             pattern="\d+(\.\d{1,2})?"
@@ -129,7 +88,8 @@ export default function AddExpense() {
             htmlFor="frequency"
             name="frequency"
             id="frequency"
-            onChange={frequencyHandler}
+            value={expenseFrequency}
+            onChange={(e) => setExpenseFrequency(e.target.value)}
           >
             Frequency
           </Select>
@@ -137,9 +97,10 @@ export default function AddExpense() {
             htmlFor="date"
             id="date"
             required
-            onChange={dateHandler}
+            onChange={(e) => setExpenseDate(e.target.value)}
             type="date"
             name="date"
+            value={expenseDate}
           >
             Due date
           </Input>

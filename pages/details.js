@@ -1,59 +1,56 @@
+import { useEffect, useState } from "react";
 import NavigationBar from "../components/Navigation/navigationBar";
 import Footer from "../components/Navigation/footer";
 import Session from "../components/hoc/session";
-import { gql, useQuery } from "@apollo/client";
 import Loading from "../components/UI/Loading";
 import UserInfo from "../components/dashboard/userInfo";
 import Tile from "../components/UI/Tile";
 import Button from "../components/button";
 import YearlyTotal from "../components/UI/YearlyTotal";
+import { supabase } from "../components/lib/supabase";
 
-const GET_USER_EXPENSES = gql`
-  query expenses {
-    expenses {
-      id
-      author {
-        fullName
-        id
-        username
-        emailAddress
+function DetailsBody() {
+  const [expenses, setExpenses] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const { data, error: queryError } = await supabase
+        .from("expenses")
+        .select("id, amount, frequency");
+
+      if (!active) return;
+
+      if (queryError) {
+        setError(queryError.message);
+        setExpenses([]);
+        return;
       }
-      name
-      amount
-      frequency
-      dateDue
-      expenseAuthor
-    }
-  }
-`;
 
-export default function Details() {
-  const { loading, error, data } = useQuery(GET_USER_EXPENSES, {
-    refetchQueries: [{ query: GET_USER_EXPENSES }],
-  });
+      setExpenses(data || []);
+    })();
 
-  if (loading) return <Loading />;
-  if (!data) return { data };
-  if (error) return `Submission error! ${error.message}`;
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const dailyAmount = data.expenses
-    .filter((expense) => expense.frequency == "DAILY")
-    .reduce((total, expense) => total + expense.amount, 0);
+  if (!expenses) return <Loading />;
+  if (error) return `Could not load expenses. ${error}`;
 
-  const weeklyAmount = data.expenses
-    .filter((expense) => expense.frequency == "WEEKLY")
-    .reduce((total, expense) => total + expense.amount, 0);
+  const sumByFrequency = (frequency) =>
+    expenses
+      .filter((expense) => expense.frequency === frequency)
+      .reduce((total, expense) => total + expense.amount, 0);
 
-  const monthlyAmount = data.expenses
-    .filter((expense) => expense.frequency == "MONTHLY")
-    .reduce((total, expense) => total + expense.amount, 0);
-
-  const yearlyAmount = data.expenses
-    .filter((expense) => expense.frequency == "YEARLY")
-    .reduce((total, expense) => total + expense.amount, 0);
+  const dailyAmount = sumByFrequency("DAILY");
+  const weeklyAmount = sumByFrequency("WEEKLY");
+  const monthlyAmount = sumByFrequency("MONTHLY");
+  const yearlyAmount = sumByFrequency("YEARLY");
 
   return (
-    <Session>
       <div className="w-full ">
         <NavigationBar />
 
@@ -79,6 +76,13 @@ export default function Details() {
 
         <Footer />
       </div>
+  );
+}
+
+export default function Details() {
+  return (
+    <Session>
+      <DetailsBody />
     </Session>
   );
 }

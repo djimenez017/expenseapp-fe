@@ -1,111 +1,103 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import useForm from "../../components/lib/useForm";
 import Session from "../../components/hoc/session";
 import Navigation from "../../components/Navigation/navigationBar";
-import { useState } from "react";
 import Title from "../../components/UI/Title";
 import Input from "../../components/forms/formComponents/input";
 import Select from "../../components/forms/formComponents/Select";
 import Footer from "../../components/Navigation/footer";
 import Submit from "../../components/forms/formComponents/Submit";
 import Loading from "../../components/UI/Loading";
+import { supabase } from "../../components/lib/supabase";
 
-const GET_SINGLE_EXPENSE = gql`
-  query getSingleExpense($ID: ID) {
-    expense(id: $ID) {
-      name
-      frequency
-      id
-      dateDue
-      amount
-    }
-  }
-`;
+function toDateInput(value) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-const UPDATE_EXPENSE = gql`
-  mutation updateExpense(
-    $ID: Int
-    $name: String
-    $amount: Float
-    $frequency: Frequency
-    $dateDue: DateTime
-  ) {
-    updateExpense(
-      ID: $ID
-      name: $name
-      amount: $amount
-      frequency: $frequency
-      dateDue: $dateDue
-    ) {
-      name
-      amount
-      dateDue
-      frequency
-    }
-  }
-`;
-
-export default function SingleExpense() {
+function EditExpenseForm() {
   const router = useRouter();
-  const expenseId = parseInt(router.query["id"]);
-  const [uDate, setUDate] = useState("");
-  const { data, error, loading } = useQuery(GET_SINGLE_EXPENSE, {
-    variables: { ID: expenseId },
-  });
+  const expenseId = parseInt(router.query.id, 10);
+  const [expense, setExpense] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const { inputs, handleChange } = useForm(expense || {});
 
-  const [
-    editExpense,
-    { data: updatedData, error: updateError, loading: updateLoading },
-  ] = useMutation(UPDATE_EXPENSE);
+  useEffect(() => {
+    if (!router.isReady || Number.isNaN(expenseId)) return;
 
-  const { inputs, handleChange, resetForm, clearForm } = useForm(data?.expense);
+    let active = true;
+
+    (async () => {
+      const { data, error: queryError } = await supabase
+        .from("expenses")
+        .select("id, name, amount, frequency, date_due")
+        .eq("id", expenseId)
+        .maybeSingle();
+
+      if (!active) return;
+
+      if (queryError) setError(queryError.message);
+      setExpense(data);
+      if (data?.date_due) setDueDate(toDateInput(data.date_due));
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [router.isReady, expenseId]);
 
   if (loading) return <Loading />;
-  if (updateLoading) return <p>Updating</p>;
-  if (updatedData) router.push("/dashboard");
+  if (saving) return <p>Updating</p>;
+  if (!expense) return <p>{error || "Expense not found"}</p>;
 
-  if (inputs.dateDue) {
-    let formattedDate;
-    const dateEntered = new Date(inputs.dateDue);
-    formattedDate = dateEntered.toISOString().split("T")[0];
-  }
+  const saveExpense = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
 
-  const dateHandler = (e) => {
-    const date = e.target.value;
-    const dateEntered = new Date(date);
-    setUDate(dateEntered.toISOString());
+    const { error: updateError } = await supabase
+      .from("expenses")
+      .update({
+        name: inputs.name,
+        amount: parseFloat(inputs.amount),
+        frequency: inputs.frequency,
+        date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
+      })
+      .eq("id", expenseId);
+
+    if (updateError) {
+      setSaving(false);
+      setError(updateError.message);
+      return;
+    }
+
+    router.push("/dashboard");
   };
 
   return (
-    <Session>
+    <>
       <Navigation />
       <main
         className="container box-border p-2 space-y-4 flex h-screen justify-center items-center flex-col"
         style={{ maxWidth: "750px" }}
       >
         <Title>Edit Expense </Title>
-        <form
-          autoComplete="off"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            await editExpense({
-              variables: {
-                ID: expenseId,
-                name: inputs.name,
-                amount: inputs.amount,
-                frequency: inputs.frequency,
-                dateDue: uDate,
-              },
-            });
-          }}
-        >
+        {error && <p className="text-red-700">{error}</p>}
+        <form autoComplete="off" onSubmit={saveExpense}>
           <Input
             htmlFor="ExpenseName"
             id="name"
             name="name"
             type="text"
-            value={inputs.name}
+            value={inputs.name || ""}
             onChange={handleChange}
             required
           >
@@ -117,7 +109,7 @@ export default function SingleExpense() {
             required
             type="number"
             name="amount"
-            value={inputs.amount}
+            value={inputs.amount ?? ""}
             onChange={handleChange}
             placeholder="0.00"
             step="0.01"
@@ -129,7 +121,7 @@ export default function SingleExpense() {
             htmlFor="frequency"
             name="frequency"
             id="frequency"
-            value={inputs.frequency}
+            value={inputs.frequency || "DAILY"}
             onChange={handleChange}
           >
             Frequency
@@ -139,8 +131,8 @@ export default function SingleExpense() {
             htmlFor="date"
             id="date"
             type="date"
-            value={formattedDate}
-            onChange={dateHandler}
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
           >
             Due Date
           </Input>
@@ -148,6 +140,14 @@ export default function SingleExpense() {
         </form>
       </main>
       <Footer />
+    </>
+  );
+}
+
+export default function SingleExpense() {
+  return (
+    <Session>
+      <EditExpenseForm />
     </Session>
   );
 }
