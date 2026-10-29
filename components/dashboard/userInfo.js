@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Loading from "../UI/Loading";
+import { messages } from "../lib/limits";
 import { supabase } from "../lib/supabase";
 
 export default function UserInfo() {
@@ -20,20 +21,23 @@ export default function UserInfo() {
       if (!active) return;
 
       if (userError || !user) {
-        setError(userError?.message || "Not signed in");
+        setError(messages.loadAccountFailed);
         setLoading(false);
         return;
       }
 
       const [{ data: profile }, { count, error: countError }] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("expenses").select("id", { count: "exact", head: true }),
+        supabase
+          .from("expenses")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
       ]);
 
       if (!active) return;
 
       if (countError) {
-        setError(countError.message);
+        setError(messages.loadAccountFailed);
         setLoading(false);
         return;
       }
@@ -49,7 +53,7 @@ export default function UserInfo() {
   }, []);
 
   if (loading) return <Loading />;
-  if (error) return <p>Error</p>;
+  if (error) return <p>{messages.loadAccountFailed}</p>;
 
   return (
     <div className="bg-white py-5">

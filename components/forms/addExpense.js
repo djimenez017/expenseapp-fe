@@ -4,6 +4,8 @@ import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
+import { parseExpense } from "../lib/expenseFields";
+import { EXPENSE_NAME_MAX, messages } from "../lib/limits";
 import { supabase } from "../lib/supabase";
 
 export default function AddExpense() {
@@ -18,6 +20,18 @@ export default function AddExpense() {
   const expenseSubmitHandler = async (e) => {
     e.preventDefault();
     setError("");
+
+    const parsed = parseExpense({
+      name: expenseName,
+      amount: expenseAmount,
+      frequency: expenseFrequency,
+      date: expenseDate,
+    });
+    if (parsed.error) {
+      setError(parsed.error);
+      return;
+    }
+
     setLoading(true);
 
     const {
@@ -32,16 +46,16 @@ export default function AddExpense() {
 
     const { error: insertError } = await supabase.from("expenses").insert({
       user_id: user.id,
-      name: expenseName,
-      amount: parseFloat(expenseAmount),
-      frequency: expenseFrequency,
-      date_due: new Date(`${expenseDate}T00:00:00`).toISOString(),
+      name: parsed.name,
+      amount: parsed.amount,
+      frequency: parsed.frequency,
+      date_due: parsed.dateDue,
     });
 
     setLoading(false);
 
     if (insertError) {
-      setError(insertError.message);
+      setError(messages.saveExpenseFailed);
       return;
     }
 
@@ -66,6 +80,7 @@ export default function AddExpense() {
             onChange={(e) => setExpenseName(e.target.value)}
             name="name"
             value={expenseName}
+            maxLength={EXPENSE_NAME_MAX}
           >
             Expense Name
           </Input>
@@ -78,6 +93,7 @@ export default function AddExpense() {
             name="amount"
             value={expenseAmount}
             placeholder="0.00"
+            min="0.01"
             step="0.01"
             pattern="\d+(\.\d{1,2})?"
           >

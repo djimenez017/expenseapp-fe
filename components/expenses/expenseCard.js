@@ -3,6 +3,8 @@ import Link from "next/link";
 import formatDate from "../lib/formatDate";
 import formatDateExtension from "../lib/formatDateExtension";
 import Loading from "../UI/Loading";
+import { getCurrentUser } from "../lib/currentUser";
+import { messages } from "../lib/limits";
 import { supabase } from "../lib/supabase";
 
 export default function ExpenseCard(props) {
@@ -17,18 +19,28 @@ export default function ExpenseCard(props) {
 
   const deleteHandler = async (e) => {
     e.preventDefault();
+    if (!window.confirm("Delete this expense?")) return;
+
     setLoading(true);
     setError("");
+
+    const user = await getCurrentUser();
+    if (!user) {
+      setLoading(false);
+      setError(messages.deleteExpenseFailed);
+      return;
+    }
 
     const { error: deleteError } = await supabase
       .from("expenses")
       .delete()
-      .eq("id", props.id);
+      .eq("id", props.id)
+      .eq("user_id", user.id);
 
     setLoading(false);
 
     if (deleteError) {
-      setError(deleteError.message);
+      setError(messages.deleteExpenseFailed);
       return;
     }
 

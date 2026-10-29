@@ -10,9 +10,9 @@ export default function Session(props) {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getUser().then(({ data, error }) => {
       if (!active) return;
-      if (!data.session) {
+      if (error || !data.user) {
         router.replace("/");
         return;
       }

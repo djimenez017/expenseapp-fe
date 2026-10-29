@@ -9,6 +9,9 @@ import Select from "../../components/forms/formComponents/Select";
 import Footer from "../../components/Navigation/footer";
 import Submit from "../../components/forms/formComponents/Submit";
 import Loading from "../../components/UI/Loading";
+import { getCurrentUser } from "../../components/lib/currentUser";
+import { parseExpense } from "../../components/lib/expenseFields";
+import { EXPENSE_NAME_MAX, messages } from "../../components/lib/limits";
 import { supabase } from "../../components/lib/supabase";
 
 function toDateInput(value) {
@@ -35,15 +38,25 @@ function EditExpenseForm() {
     let active = true;
 
     (async () => {
+      const user = await getCurrentUser();
+      if (!active) return;
+
+      if (!user) {
+        setError(messages.loadExpenseFailed);
+        setLoading(false);
+        return;
+      }
+
       const { data, error: queryError } = await supabase
         .from("expenses")
         .select("id, name, amount, frequency, date_due")
         .eq("id", expenseId)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (!active) return;
 
-      if (queryError) setError(queryError.message);
+      if (queryError) setError(messages.loadExpenseFailed);
       setExpense(data);
       if (data?.date_due) setDueDate(toDateInput(data.date_due));
       setLoading(false);
@@ -60,22 +73,42 @@ function EditExpenseForm() {
 
   const saveExpense = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setError("");
+
+    const parsed = parseExpense({
+      name: inputs.name,
+      amount: inputs.amount,
+      frequency: inputs.frequency,
+      date: dueDate,
+    });
+    if (parsed.error) {
+      setError(parsed.error);
+      return;
+    }
+
+    setSaving(true);
+
+    const user = await getCurrentUser();
+    if (!user) {
+      setSaving(false);
+      setError(messages.saveExpenseFailed);
+      return;
+    }
 
     const { error: updateError } = await supabase
       .from("expenses")
       .update({
-        name: inputs.name,
-        amount: parseFloat(inputs.amount),
-        frequency: inputs.frequency,
-        date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
+        name: parsed.name,
+        amount: parsed.amount,
+        frequency: parsed.frequency,
+        date_due: parsed.dateDue,
       })
-      .eq("id", expenseId);
+      .eq("id", expenseId)
+      .eq("user_id", user.id);
 
     if (updateError) {
       setSaving(false);
-      setError(updateError.message);
+      setError(messages.saveExpenseFailed);
       return;
     }
 
@@ -99,6 +132,7 @@ function EditExpenseForm() {
             type="text"
             value={inputs.name || ""}
             onChange={handleChange}
+            maxLength={EXPENSE_NAME_MAX}
             required
           >
             Expense Name
@@ -112,6 +146,7 @@ function EditExpenseForm() {
             value={inputs.amount ?? ""}
             onChange={handleChange}
             placeholder="0.00"
+            min="0.01"
             step="0.01"
             pattern="\d+(\.\d{1,2})?"
           >
