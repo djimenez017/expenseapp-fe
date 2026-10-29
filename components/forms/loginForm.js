@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
+import { messages } from "../lib/limits";
 import { supabase } from "../lib/supabase";
 
 export default function LoginForm() {
@@ -25,7 +26,7 @@ export default function LoginForm() {
     setLoading(false);
 
     if (signInError) {
-      setError(signInError.message);
+      setError(messages.signInFailed);
       return;
     }
 

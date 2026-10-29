@@ -3,7 +3,9 @@ import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
+import { FULL_NAME_MAX, MIN_PASSWORD_LENGTH, USERNAME_MAX, messages } from "../lib/limits";
 import { supabase } from "../lib/supabase";
+import { accountFieldError } from "../validator";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
@@ -19,6 +21,13 @@ export default function RegisterForm() {
     e.preventDefault();
     setError("");
     setNotice("");
+
+    const fieldError = accountFieldError({ name, username, password });
+    if (fieldError) {
+      setError(fieldError);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -27,8 +36,8 @@ export default function RegisterForm() {
         password,
         options: {
           data: {
-            full_name: name,
-            username,
+            full_name: name.trim(),
+            username: username.trim(),
           },
         },
       });
@@ -36,7 +45,7 @@ export default function RegisterForm() {
       setLoading(false);
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(messages.signUpFailed);
         return;
       }
 
@@ -46,9 +55,9 @@ export default function RegisterForm() {
       }
 
       setNotice("Check your email to confirm the account, then log in.");
-    } catch (signUpFailure) {
+    } catch {
       setLoading(false);
-      setError(signUpFailure.message || "Could not create the account.");
+      setError(messages.signUpFailed);
     }
   };
 
@@ -71,6 +80,7 @@ export default function RegisterForm() {
             onChange={(e) => setName(e.target.value)}
             type="text"
             value={name}
+            maxLength={FULL_NAME_MAX}
             required
           >
             Full Name
@@ -93,6 +103,7 @@ export default function RegisterForm() {
             onChange={(e) => setUsername(e.target.value)}
             type="text"
             value={username}
+            maxLength={USERNAME_MAX}
             required
           >
             Username
@@ -104,6 +115,8 @@ export default function RegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             value={password}
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
             required
           >
             Password

@@ -3,6 +3,8 @@ import ExpenseCard from "./expenses/expenseCard";
 import Button from "./button";
 import Loading from "./UI/Loading";
 import UserInfo from "./dashboard/userInfo";
+import { getCurrentUser } from "./lib/currentUser";
+import { messages } from "./lib/limits";
 import { supabase } from "./lib/supabase";
 
 export default function Container() {
@@ -10,17 +12,26 @@ export default function Container() {
   const [error, setError] = useState("");
 
   const loadExpenses = async () => {
-    const { data, error: queryError } = await supabase
-      .from("expenses")
-      .select("id, name, amount, frequency, date_due")
-      .order("date_due", { ascending: true });
-
-    if (queryError) {
-      setError(queryError.message);
+    const user = await getCurrentUser();
+    if (!user) {
+      setError(messages.loadExpensesFailed);
       setExpenses([]);
       return;
     }
 
+    const { data, error: queryError } = await supabase
+      .from("expenses")
+      .select("id, name, amount, frequency, date_due")
+      .eq("user_id", user.id)
+      .order("date_due", { ascending: true });
+
+    if (queryError) {
+      setError(messages.loadExpensesFailed);
+      setExpenses([]);
+      return;
+    }
+
+    setError("");
     setExpenses(data || []);
   };
 
@@ -29,7 +40,7 @@ export default function Container() {
   }, []);
 
   if (!expenses) return <Loading />;
-  if (error) return `Could not load expenses. ${error}`;
+  if (error) return messages.loadExpensesFailed;
 
   return (
     <main

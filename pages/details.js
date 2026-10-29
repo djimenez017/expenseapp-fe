@@ -7,6 +7,8 @@ import UserInfo from "../components/dashboard/userInfo";
 import Tile from "../components/UI/Tile";
 import Button from "../components/button";
 import YearlyTotal from "../components/UI/YearlyTotal";
+import { getCurrentUser } from "../components/lib/currentUser";
+import { messages } from "../components/lib/limits";
 import { supabase } from "../components/lib/supabase";
 
 function DetailsBody() {
@@ -17,14 +19,24 @@ function DetailsBody() {
     let active = true;
 
     (async () => {
+      const user = await getCurrentUser();
+      if (!active) return;
+
+      if (!user) {
+        setError(messages.loadExpensesFailed);
+        setExpenses([]);
+        return;
+      }
+
       const { data, error: queryError } = await supabase
         .from("expenses")
-        .select("id, amount, frequency");
+        .select("id, amount, frequency")
+        .eq("user_id", user.id);
 
       if (!active) return;
 
       if (queryError) {
-        setError(queryError.message);
+        setError(messages.loadExpensesFailed);
         setExpenses([]);
         return;
       }
@@ -38,7 +50,7 @@ function DetailsBody() {
   }, []);
 
   if (!expenses) return <Loading />;
-  if (error) return `Could not load expenses. ${error}`;
+  if (error) return messages.loadExpensesFailed;
 
   const sumByFrequency = (frequency) =>
     expenses

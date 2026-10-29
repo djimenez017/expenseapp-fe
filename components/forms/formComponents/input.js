@@ -15,6 +15,10 @@ export default function input(props) {
           placeholder={props.placeholder}
           step={props.step}
           pattern={props.pattern}
+          min={props.min}
+          minLength={props.minLength}
+          maxLength={props.maxLength}
+          autoComplete={props.autoComplete}
           required
         />
       </label>
