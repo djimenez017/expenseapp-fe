@@ -12,9 +12,9 @@ export default function YearlyTotal({
     Number(monthlyAmount) * 12 +
     Number(yearlyAmount);
   return (
-    <div className="p-4 space-y-4 mb-10 bg-orange text-white text-xl text-center">
-      Your Total Yearly Amount is:{" "}
-      <span className="text-bold">${totalPerYear.toFixed(2)}</span>
+    <div className="rounded-3xl bg-clay px-6 py-5 text-white">
+      <p className="text-sm uppercase tracking-widest text-white/80">A year of bills</p>
+      <p className="mt-1 text-4xl">${totalPerYear.toFixed(2)}</p>
     </div>
   );
 }

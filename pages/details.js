@@ -5,23 +5,35 @@ import Session from "../components/hoc/session";
 import Loading from "../components/UI/Loading";
 import UserInfo from "../components/dashboard/userInfo";
 import Tile from "../components/UI/Tile";
-import Button from "../components/button";
+import Link from "next/link";
 import YearlyTotal from "../components/UI/YearlyTotal";
+import LeftoverSummary from "../components/UI/LeftoverSummary";
+import { PaycheckCheck } from "../components/dashboard/paycheckSummary";
 import { supabase } from "../components/lib/supabase";
+import { leftoverSummary, sumByFrequency } from "../components/lib/leftover";
 
 function DetailsBody() {
   const [expenses, setExpenses] = useState(null);
+  const [paycheck, setPaycheck] = useState(null);
+  const [spending, setSpending] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
 
     (async () => {
-      const { data, error: queryError } = await supabase
-        .from("expenses")
-        .select("id, amount, frequency");
+      const [expensesResult, paycheckResult, spendingResult] = await Promise.all([
+        supabase
+          .from("expenses")
+          .select("id, name, amount, frequency, date_due, kind, remaining_balance"),
+        supabase.from("paychecks").select("amount, schedule, next_payday").maybeSingle(),
+        supabase.from("spending").select("id, amount, spent_on"),
+      ]);
 
       if (!active) return;
+
+      const queryError =
+        expensesResult.error || paycheckResult.error || spendingResult.error;
 
       if (queryError) {
         setError(queryError.message);
@@ -29,7 +41,9 @@ function DetailsBody() {
         return;
       }
 
-      setExpenses(data || []);
+      setExpenses(expensesResult.data || []);
+      setPaycheck(paycheckResult.data);
+      setSpending(spendingResult.data || []);
     })();
 
     return () => {
@@ -40,27 +54,27 @@ function DetailsBody() {
   if (!expenses) return <Loading />;
   if (error) return `Could not load expenses. ${error}`;
 
-  const sumByFrequency = (frequency) =>
-    expenses
-      .filter((expense) => expense.frequency === frequency)
-      .reduce((total, expense) => total + expense.amount, 0);
-
-  const dailyAmount = sumByFrequency("DAILY");
-  const weeklyAmount = sumByFrequency("WEEKLY");
-  const monthlyAmount = sumByFrequency("MONTHLY");
-  const yearlyAmount = sumByFrequency("YEARLY");
+  const dailyAmount = sumByFrequency(expenses, "DAILY");
+  const weeklyAmount = sumByFrequency(expenses, "WEEKLY");
+  const monthlyAmount = sumByFrequency(expenses, "MONTHLY");
+  const yearlyAmount = sumByFrequency(expenses, "YEARLY");
+  const summary = leftoverSummary({ paycheck, expenses, spending });
 
   return (
       <div className="w-full ">
         <NavigationBar />
 
-        <div
-          className="container box-border p-2 space-y-4 mb-10"
-          style={{ maxWidth: "750px" }}
-        >
+        <main className="shell space-y-6">
           <UserInfo />
-          <Button to="/dashboard">Back to Dashboard</Button>
-          <div className="flex md:justify-between flex-wrap space-around">
+          <Link href="/dashboard">
+            <a className="text-sm font-bold text-green hover:text-ink">Back to dashboard</a>
+          </Link>
+          {paycheck && (
+            <div className="panel">
+              <PaycheckCheck paycheck={paycheck} expenses={expenses} />
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3">
             <Tile frequency="Daily" amount={dailyAmount.toFixed(2)} />
             <Tile frequency="Weekly" amount={weeklyAmount.toFixed(2)} />
             <Tile frequency="Monthly" amount={monthlyAmount.toFixed(2)} />
@@ -72,7 +86,8 @@ function DetailsBody() {
             monthlyAmount={monthlyAmount}
             yearlyAmount={yearlyAmount}
           />
-        </div>
+          <LeftoverSummary paycheck={paycheck} summary={summary} />
+        </main>
 
         <Footer />
       </div>

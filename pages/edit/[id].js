@@ -6,10 +6,16 @@ import Navigation from "../../components/Navigation/navigationBar";
 import Title from "../../components/UI/Title";
 import Input from "../../components/forms/formComponents/input";
 import Select from "../../components/forms/formComponents/Select";
+import OptionSelect from "../../components/forms/formComponents/OptionSelect";
 import Footer from "../../components/Navigation/footer";
 import Submit from "../../components/forms/formComponents/Submit";
 import Loading from "../../components/UI/Loading";
 import { supabase } from "../../components/lib/supabase";
+import {
+  EXPENSE_KINDS,
+  amountFieldLabel,
+  dateFieldLabel,
+} from "../../components/lib/expenseOptions";
 
 function toDateInput(value) {
   const date = new Date(value);
@@ -37,7 +43,7 @@ function EditExpenseForm() {
     (async () => {
       const { data, error: queryError } = await supabase
         .from("expenses")
-        .select("id, name, amount, frequency, date_due")
+        .select("id, name, amount, frequency, date_due, kind, remaining_balance")
         .eq("id", expenseId)
         .maybeSingle();
 
@@ -69,6 +75,9 @@ function EditExpenseForm() {
         name: inputs.name,
         amount: parseFloat(inputs.amount),
         frequency: inputs.frequency,
+        kind: inputs.kind || "BILL",
+        remaining_balance:
+          inputs.kind === "LOAN" ? parseFloat(inputs.remaining_balance) : null,
         date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
       })
       .eq("id", expenseId);
@@ -85,13 +94,10 @@ function EditExpenseForm() {
   return (
     <>
       <Navigation />
-      <main
-        className="container box-border p-2 space-y-4 flex h-screen justify-center items-center flex-col"
-        style={{ maxWidth: "750px" }}
-      >
-        <Title>Edit Expense </Title>
-        {error && <p className="text-red-700">{error}</p>}
-        <form autoComplete="off" onSubmit={saveExpense}>
+      <main className="shell space-y-6">
+        <Title>Edit expense</Title>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <form className="panel" autoComplete="off" onSubmit={saveExpense}>
           <Input
             htmlFor="ExpenseName"
             id="name"
@@ -103,6 +109,16 @@ function EditExpenseForm() {
           >
             Expense Name
           </Input>
+          <OptionSelect
+            htmlFor="kind"
+            name="kind"
+            id="kind"
+            value={inputs.kind || "BILL"}
+            onChange={handleChange}
+            options={EXPENSE_KINDS}
+          >
+            Type
+          </OptionSelect>
           <Input
             htmlFor="amount"
             id="amount"
@@ -115,8 +131,25 @@ function EditExpenseForm() {
             step="0.01"
             pattern="\d+(\.\d{1,2})?"
           >
-            Amount
+            {amountFieldLabel(inputs.kind)}
           </Input>
+          {inputs.kind === "LOAN" && (
+            <Input
+              htmlFor="remainingBalance"
+              id="remaining_balance"
+              required
+              type="number"
+              name="remaining_balance"
+              value={inputs.remaining_balance ?? ""}
+              onChange={handleChange}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              Remaining balance
+            </Input>
+          )}
           <Select
             htmlFor="frequency"
             name="frequency"
@@ -134,7 +167,7 @@ function EditExpenseForm() {
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
           >
-            Due Date
+            {dateFieldLabel(inputs.kind)}
           </Input>
           <Submit />
         </form>

@@ -2,15 +2,24 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
+import OptionSelect from "../forms/formComponents/OptionSelect";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
 import { supabase } from "../lib/supabase";
+import ensureProfile from "../lib/ensureProfile";
+import {
+  EXPENSE_KINDS,
+  amountFieldLabel,
+  dateFieldLabel,
+} from "../lib/expenseOptions";
 
 export default function AddExpense() {
   const [expenseName, setExpenseName] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
   const [expenseFrequency, setExpenseFrequency] = useState("DAILY");
+  const [expenseKind, setExpenseKind] = useState("BILL");
+  const [remainingBalance, setRemainingBalance] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -30,11 +39,21 @@ export default function AddExpense() {
       return;
     }
 
+    const profileError = await ensureProfile(user);
+    if (profileError) {
+      setLoading(false);
+      setError(profileError.message);
+      return;
+    }
+
     const { error: insertError } = await supabase.from("expenses").insert({
       user_id: user.id,
       name: expenseName,
       amount: parseFloat(expenseAmount),
       frequency: expenseFrequency,
+      kind: expenseKind,
+      remaining_balance:
+        expenseKind === "LOAN" ? parseFloat(remainingBalance) : null,
       date_due: new Date(`${expenseDate}T00:00:00`).toISOString(),
     });
 
@@ -52,11 +71,11 @@ export default function AddExpense() {
 
   return (
     <>
-      {error && <p className="text-red-700 bg-red-200">{error}</p>}
+      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
       <form
         onSubmit={expenseSubmitHandler}
         autoComplete="off"
-        className="my-5 "
+        className="panel"
       >
         <div>
           <Input
@@ -69,6 +88,16 @@ export default function AddExpense() {
           >
             Expense Name
           </Input>
+          <OptionSelect
+            htmlFor="kind"
+            name="kind"
+            id="kind"
+            value={expenseKind}
+            onChange={(e) => setExpenseKind(e.target.value)}
+            options={EXPENSE_KINDS}
+          >
+            Type
+          </OptionSelect>
           <Input
             htmlFor="amount"
             id="amount"
@@ -81,8 +110,25 @@ export default function AddExpense() {
             step="0.01"
             pattern="\d+(\.\d{1,2})?"
           >
-            Amount
+            {amountFieldLabel(expenseKind)}
           </Input>
+          {expenseKind === "LOAN" && (
+            <Input
+              htmlFor="remainingBalance"
+              id="remainingBalance"
+              required
+              onChange={(e) => setRemainingBalance(e.target.value)}
+              type="number"
+              name="remainingBalance"
+              value={remainingBalance}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              Remaining balance
+            </Input>
+          )}
 
           <Select
             htmlFor="frequency"
@@ -102,10 +148,10 @@ export default function AddExpense() {
             name="date"
             value={expenseDate}
           >
-            Due date
+            {dateFieldLabel(expenseKind)}
           </Input>
 
-          <Submit />
+          <Submit>Add expense</Submit>
         </div>
       </form>
     </>

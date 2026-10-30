@@ -8,16 +8,11 @@ import Footer from "../components/Navigation/footer";
 export default function addExpense() {
   return (
     <Session>
-      <Navigation />{" "}
-      <div className="flex h-screen justify-center items-center">
-        <main
-          className="container box-border p-2 space-y-4 "
-          style={{ maxWidth: "750px" }}
-        >
-          <Title>Create an Expense</Title>
-          <AddExpenseForm />
-        </main>
-      </div>
+      <Navigation />
+      <main className="shell space-y-6">
+        <Title>New expense</Title>
+        <AddExpenseForm />
+      </main>
       <Footer />
     </Session>
   );

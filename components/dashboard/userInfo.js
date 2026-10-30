@@ -52,11 +52,13 @@ export default function UserInfo() {
   if (error) return <p>Error</p>;
 
   return (
-    <div className="bg-white py-5">
-      <h1 className="text-grey text-4xl font-bold">{fullName}</h1>
-      <p className="py-2 font-bold text-lg">
-        Total Expenses:{" "}
-        <span className="text-orange text-2xl">{expenseCount}</span>
+    <div className="flex items-end justify-between gap-4">
+      <div>
+        <p className="text-sm font-bold uppercase tracking-widest text-muted">Hello</p>
+        <h1 className="text-4xl text-ink">{fullName}</h1>
+      </div>
+      <p className="text-sm text-muted">
+        {expenseCount} {expenseCount === 1 ? "expense" : "expenses"}
       </p>
     </div>
   );

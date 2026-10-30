@@ -4,21 +4,19 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    screens: {
-      sm: "480px",
-      md: "768px",
-      lg: "976px",
-      xl: "1440px",
-    },
-    colors: {
-      // grey: "#595959",
-      // blue: "#009FB7",
-      // white: "#F2F2F2",
-      orange: "#ec7357ff;",
-      green: "#72b01dff",
-      black: "#343633ff",
-      white: "#ffffff",
-      gray: "#a5b5bfff",
+    extend: {
+      colors: {
+        orange: "#c45c38",
+        green: "#2f6b45",
+        black: "#1e2a22",
+        gray: "#8d867c",
+        ink: "#1e2a22",
+        paper: "#f6f1e8",
+        clay: "#c45c38",
+        line: "#e7dfd2",
+        muted: "#6f6a62",
+        danger: "#9b3d32",
+      },
     },
     container: {
       center: true,

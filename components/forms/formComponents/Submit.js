@@ -1,13 +1,13 @@
 import React from "react";
 
-export default function Submit() {
+export default function Submit({ children = "Save" }) {
   return (
     <button
       type="submit"
       value="submit"
-      className="bg-green w-full p-2 text-white text-xl font-bold hover:bg-orange transition duration-300 ease-in-out"
+      className="mt-2 inline-flex w-full items-center justify-center rounded-full bg-green px-5 py-3 font-bold text-white transition hover:bg-ink"
     >
-      Submit
+      {children}
     </button>
   );
 }

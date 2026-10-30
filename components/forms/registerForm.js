@@ -62,7 +62,7 @@ export default function RegisterForm() {
       {notice && (
         <p className="text-green font-bold mb-2">{notice}</p>
       )}
-      <form onSubmit={onSubmitHandler}>
+      <form onSubmit={onSubmitHandler} className="panel">
         <div className="my-5">
           <Input
             htmlFor="name"
@@ -109,7 +109,7 @@ export default function RegisterForm() {
             Password
           </Input>
 
-          <Submit />
+          <Submit>Create account</Submit>
         </div>
       </form>
     </>

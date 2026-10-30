@@ -13,8 +13,9 @@ body {
   padding: 0;
   margin: 0;
   font-family: "Cabin", sans-serif;
-  font-size: 18px;
-  background-color: #ffffff;
+  font-size: 16px;
+  background-color: #f6f1e8;
+  color: #1e2a22;
 }
 
 a {
@@ -27,6 +28,16 @@ a {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   font-family: "Roboto Condensed", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.shell {
+  @apply mx-auto w-full max-w-3xl px-4 py-8;
+}
+
+.panel {
+  @apply rounded-3xl border border-line bg-white p-5;
 }

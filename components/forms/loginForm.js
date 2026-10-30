@@ -62,7 +62,7 @@ export default function LoginForm() {
             Password
           </Input>
 
-          <Submit />
+          <Submit>Sign in</Submit>
         </div>
       </form>
     </div>

@@ -12,15 +12,20 @@ export default function NavigationBar() {
   };
 
   return (
-    <div className="flex flex-row md:justify-around justify-between content-center items-center py-3 px-3 w-full bg-white shadow-md">
-      <h1 className="text-green text-2xl font-bold transition duration-300 ease-in-out hover:text-orange ">
-        <Link href={"/dashboard"}>ExpenseApp</Link>
-      </h1>
-      <ol className="flex flex-row justify-end">
-        <li className="px-2 text-green font-bold transition duration-300 ease-in-out hover:text-orange">
-          <button onClick={signout}>Log Out</button>
-        </li>
-      </ol>
-    </div>
+    <header className="sticky top-0 z-20 border-b border-line bg-paper/90 backdrop-blur">
+      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+        <Link href="/dashboard">
+          <a className="text-2xl text-ink">
+            Expense<span className="text-clay">App</span>
+          </a>
+        </Link>
+        <button
+          onClick={signout}
+          className="text-sm font-bold text-muted hover:text-ink"
+        >
+          Log out
+        </button>
+      </div>
+    </header>
   );
 }
