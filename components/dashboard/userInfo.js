@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import Loading from "../UI/Loading";
 import { supabase } from "../lib/supabase";
 
@@ -55,7 +56,9 @@ export default function UserInfo() {
     <div className="flex items-end justify-between gap-4">
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-muted">Hello</p>
-        <h1 className="text-4xl text-ink">{fullName}</h1>
+        <Link href="/profile">
+          <a className="text-4xl text-ink hover:text-green">{fullName}</a>
+        </Link>
       </div>
       <p className="text-sm text-muted">
         {expenseCount} {expenseCount === 1 ? "expense" : "expenses"}

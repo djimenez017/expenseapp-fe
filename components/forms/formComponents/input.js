@@ -15,6 +15,7 @@ export default function input(props) {
         step={props.step}
         pattern={props.pattern}
         min={props.min}
+        max={props.max}
         required
       />
     </label>

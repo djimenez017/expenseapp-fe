@@ -26,7 +26,10 @@ function DetailsBody() {
         supabase
           .from("expenses")
           .select("id, name, amount, frequency, date_due, kind, remaining_balance"),
-        supabase.from("paychecks").select("amount, schedule, next_payday").maybeSingle(),
+        supabase
+          .from("paychecks")
+          .select("amount, schedule, next_payday, payday_one, payday_two")
+          .maybeSingle(),
         supabase.from("spending").select("id, amount, spent_on"),
       ]);
 
@@ -64,16 +67,19 @@ function DetailsBody() {
       <div className="w-full ">
         <NavigationBar />
 
-        <main className="shell space-y-6">
+        <main className="board space-y-6">
           <UserInfo />
           <Link href="/dashboard">
             <a className="text-sm font-bold text-green hover:text-ink">Back to dashboard</a>
           </Link>
-          {paycheck && (
-            <div className="panel">
-              <PaycheckCheck paycheck={paycheck} expenses={expenses} />
-            </div>
-          )}
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            {paycheck && (
+              <div className="panel">
+                <PaycheckCheck paycheck={paycheck} expenses={expenses} />
+              </div>
+            )}
+            <LeftoverSummary paycheck={paycheck} summary={summary} />
+          </div>
           <div className="flex flex-wrap gap-3">
             <Tile frequency="Daily" amount={dailyAmount.toFixed(2)} />
             <Tile frequency="Weekly" amount={weeklyAmount.toFixed(2)} />
@@ -86,7 +92,6 @@ function DetailsBody() {
             monthlyAmount={monthlyAmount}
             yearlyAmount={yearlyAmount}
           />
-          <LeftoverSummary paycheck={paycheck} summary={summary} />
         </main>
 
         <Footer />

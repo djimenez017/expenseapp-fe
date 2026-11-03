@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import Input from "../forms/formComponents/input";
+import TagField from "../forms/formComponents/TagField";
 import Submit from "../forms/formComponents/Submit";
+import TagChips from "../tags/tagChips";
 import { supabase } from "../lib/supabase";
 import ensureProfile from "../lib/ensureProfile";
+import { syncSpendingTags, useTagSuggestions } from "../lib/tags";
 import { formatDollars, parseSpentOn } from "../lib/leftover";
 
 function todayInput() {
@@ -13,12 +16,21 @@ function todayInput() {
   return `${year}-${month}-${day}`;
 }
 
-export default function SpendingLog({ items, onChanged }) {
+export default function SpendingLog({
+  items,
+  onChanged,
+  onTagSelect,
+  hideHeading,
+  hideForm,
+  showKind,
+}) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [spentOn, setSpentOn] = useState(todayInput);
+  const [tags, setTags] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const { suggestions, refreshSuggestions } = useTagSuggestions();
 
   const addSpending = async (e) => {
     e.preventDefault();
@@ -42,23 +54,45 @@ export default function SpendingLog({ items, onChanged }) {
       return;
     }
 
-    const { error: insertError } = await supabase.from("spending").insert({
-      user_id: user.id,
-      name,
-      amount: parseFloat(amount),
-      spent_on: spentOn,
-    });
-
-    setSaving(false);
+    const { data: created, error: insertError } = await supabase
+      .from("spending")
+      .insert({
+        user_id: user.id,
+        name,
+        amount: parseFloat(amount),
+        spent_on: spentOn,
+      })
+      .select("id")
+      .single();
 
     if (insertError) {
+      setSaving(false);
       setError(insertError.message);
       return;
     }
 
+    const tagError = await syncSpendingTags(
+      user.id,
+      created.id,
+      tags.map((tag) => tag.name)
+    );
+
+    if (tagError) {
+      const { error: rollbackError } = await supabase
+        .from("spending")
+        .delete()
+        .eq("id", created.id);
+      setSaving(false);
+      setError(rollbackError ? `${tagError.message} ${rollbackError.message}` : tagError.message);
+      return;
+    }
+
+    setSaving(false);
     setName("");
     setAmount("");
     setSpentOn(todayInput());
+    setTags([]);
+    refreshSuggestions();
     if (onChanged) onChanged();
   };
 
@@ -79,48 +113,63 @@ export default function SpendingLog({ items, onChanged }) {
 
   return (
     <section className="space-y-3">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-2xl">Spending this month</h2>
-        <span className="text-sm text-muted">{items.length}</span>
-      </div>
-      <form onSubmit={addSpending} autoComplete="off" className="panel">
-        <Input
-          htmlFor="spendingName"
-          id="spendingName"
-          name="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        >
-          Purchase
-        </Input>
-        <Input
-          htmlFor="spendingAmount"
-          id="spendingAmount"
-          type="number"
-          name="amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.00"
-          step="0.01"
-          min="0"
-          pattern="\d+(\.\d{1,2})?"
-        >
-          Amount
-        </Input>
-        <Input
-          htmlFor="spentOn"
-          id="spentOn"
-          type="date"
-          name="spentOn"
-          value={spentOn}
-          onChange={(e) => setSpentOn(e.target.value)}
-        >
-          Date
-        </Input>
-        {error && <p className="mb-4 text-sm text-danger">{error}</p>}
-        <Submit>Log purchase</Submit>
-        {saving && <p className="pt-2">Saving</p>}
-      </form>
+      {!hideHeading && (
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-2xl">Spending this month</h2>
+          <span className="text-sm text-muted">{items.length}</span>
+        </div>
+      )}
+      {!hideForm && (
+        <form onSubmit={addSpending} autoComplete="off" className="panel">
+          <div className="grid gap-x-4 sm:grid-cols-3">
+            <Input
+              htmlFor="spendingName"
+              id="spendingName"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            >
+              Purchase
+            </Input>
+            <Input
+              htmlFor="spendingAmount"
+              id="spendingAmount"
+              type="number"
+              name="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              Amount
+            </Input>
+            <Input
+              htmlFor="spentOn"
+              id="spentOn"
+              type="date"
+              name="spentOn"
+              value={spentOn}
+              onChange={(e) => setSpentOn(e.target.value)}
+            >
+              Date
+            </Input>
+          </div>
+          <TagField
+            id="spendingTags"
+            value={tags}
+            suggestions={suggestions}
+            onChange={setTags}
+          />
+          {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+          <div className="max-w-xs">
+            <Submit>Log purchase</Submit>
+          </div>
+          {saving && <p className="pt-2">Saving</p>}
+        </form>
+      )}
+      {hideForm && error && <p className="text-sm text-danger">{error}</p>}
       {items.length === 0 ? (
         <p className="text-muted">None yet.</p>
       ) : (
@@ -133,8 +182,10 @@ export default function SpendingLog({ items, onChanged }) {
               <div>
                 <p className="font-bold">{item.name}</p>
                 <p className="text-sm text-muted">
+                  {showKind ? "Spending · " : ""}
                   {parseSpentOn(item.spent_on).toLocaleDateString()}
                 </p>
+                <TagChips tags={item.tags} onSelect={onTagSelect} />
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-bold">{formatDollars(item.amount)}</span>

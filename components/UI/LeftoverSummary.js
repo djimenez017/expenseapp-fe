@@ -31,7 +31,7 @@ export default function LeftoverSummary({ paycheck, summary }) {
       ) : (
         <div className="mt-4 space-y-3">
           <p className="text-muted">Add your paycheck to see what is left each month and year.</p>
-          <Button to="/paycheck">Add paycheck</Button>
+          <Button to="/profile">Add paycheck</Button>
         </div>
       )}
     </div>

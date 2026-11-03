@@ -8,7 +8,6 @@ import { supabase } from "../lib/supabase";
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -28,7 +27,6 @@ export default function RegisterForm() {
         options: {
           data: {
             full_name: name,
-            username,
           },
         },
       });
@@ -85,17 +83,6 @@ export default function RegisterForm() {
             required
           >
             Email Address
-          </Input>
-          <Input
-            htmlFor="username"
-            id="username"
-            name="username"
-            onChange={(e) => setUsername(e.target.value)}
-            type="text"
-            value={username}
-            required
-          >
-            Username
           </Input>
           <Input
             htmlFor="password"

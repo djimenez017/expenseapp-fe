@@ -7,6 +7,7 @@ import Title from "../../components/UI/Title";
 import Input from "../../components/forms/formComponents/input";
 import Select from "../../components/forms/formComponents/Select";
 import OptionSelect from "../../components/forms/formComponents/OptionSelect";
+import TagField from "../../components/forms/formComponents/TagField";
 import Footer from "../../components/Navigation/footer";
 import Submit from "../../components/forms/formComponents/Submit";
 import Loading from "../../components/UI/Loading";
@@ -15,7 +16,9 @@ import {
   EXPENSE_KINDS,
   amountFieldLabel,
   dateFieldLabel,
+  tracksBalance,
 } from "../../components/lib/expenseOptions";
+import { loadExpense, syncExpenseTags, useTagSuggestions } from "../../components/lib/tags";
 
 function toDateInput(value) {
   const date = new Date(value);
@@ -33,6 +36,8 @@ function EditExpenseForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [tags, setTags] = useState([]);
+  const { suggestions } = useTagSuggestions();
   const { inputs, handleChange } = useForm(expense || {});
 
   useEffect(() => {
@@ -41,16 +46,19 @@ function EditExpenseForm() {
     let active = true;
 
     (async () => {
-      const { data, error: queryError } = await supabase
-        .from("expenses")
-        .select("id, name, amount, frequency, date_due, kind, remaining_balance")
-        .eq("id", expenseId)
-        .maybeSingle();
+      const { data, error: queryError } = await loadExpense(expenseId);
 
       if (!active) return;
 
       if (queryError) setError(queryError.message);
-      setExpense(data);
+      if (data) {
+        const { tags: loadedTags, ...expenseRow } = data;
+        setExpense(expenseRow);
+        setTags(loadedTags || []);
+      } else {
+        setExpense(null);
+        setTags([]);
+      }
       if (data?.date_due) setDueDate(toDateInput(data.date_due));
       setLoading(false);
     })();
@@ -69,22 +77,52 @@ function EditExpenseForm() {
     setSaving(true);
     setError("");
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setSaving(false);
+      router.push("/");
+      return;
+    }
+
+    const updates = {
+      name: inputs.name,
+      amount: parseFloat(inputs.amount),
+      frequency: inputs.frequency,
+      kind: inputs.kind || "BILL",
+      remaining_balance:
+        tracksBalance(inputs.kind) ? parseFloat(inputs.remaining_balance) : null,
+      date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
+    };
+
+    if (inputs.kind === "CREDIT_CARD") {
+      updates.credit_limit = parseFloat(inputs.credit_limit);
+    } else if (inputs.credit_limit != null && inputs.credit_limit !== "") {
+      updates.credit_limit = null;
+    }
+
     const { error: updateError } = await supabase
       .from("expenses")
-      .update({
-        name: inputs.name,
-        amount: parseFloat(inputs.amount),
-        frequency: inputs.frequency,
-        kind: inputs.kind || "BILL",
-        remaining_balance:
-          inputs.kind === "LOAN" ? parseFloat(inputs.remaining_balance) : null,
-        date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
-      })
+      .update(updates)
       .eq("id", expenseId);
 
     if (updateError) {
       setSaving(false);
       setError(updateError.message);
+      return;
+    }
+
+    const tagError = await syncExpenseTags(
+      user.id,
+      expenseId,
+      tags.map((tag) => tag.name)
+    );
+
+    if (tagError) {
+      setSaving(false);
+      setError(tagError.message);
       return;
     }
 
@@ -119,6 +157,12 @@ function EditExpenseForm() {
           >
             Type
           </OptionSelect>
+          <TagField
+            id="expenseTags"
+            value={tags}
+            suggestions={suggestions}
+            onChange={setTags}
+          />
           <Input
             htmlFor="amount"
             id="amount"
@@ -133,7 +177,7 @@ function EditExpenseForm() {
           >
             {amountFieldLabel(inputs.kind)}
           </Input>
-          {inputs.kind === "LOAN" && (
+          {tracksBalance(inputs.kind) && (
             <Input
               htmlFor="remainingBalance"
               id="remaining_balance"
@@ -148,6 +192,23 @@ function EditExpenseForm() {
               pattern="\d+(\.\d{1,2})?"
             >
               Remaining balance
+            </Input>
+          )}
+          {inputs.kind === "CREDIT_CARD" && (
+            <Input
+              htmlFor="creditLimit"
+              id="credit_limit"
+              required
+              type="number"
+              name="credit_limit"
+              value={inputs.credit_limit ?? ""}
+              onChange={handleChange}
+              placeholder="0.00"
+              step="0.01"
+              min="0.01"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              Credit limit
             </Input>
           )}
           <Select

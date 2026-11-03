@@ -13,18 +13,23 @@ export default function NavigationBar() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper/90 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/dashboard">
           <a className="text-2xl text-ink">
             Expense<span className="text-clay">App</span>
           </a>
         </Link>
-        <button
-          onClick={signout}
-          className="text-sm font-bold text-muted hover:text-ink"
-        >
-          Log out
-        </button>
+        <div className="flex items-center gap-4">
+          <Link href="/profile">
+            <a className="text-sm font-bold text-muted hover:text-ink">Profile</a>
+          </Link>
+          <button
+            onClick={signout}
+            className="text-sm font-bold text-muted hover:text-ink"
+          >
+            Log out
+          </button>
+        </div>
       </div>
     </header>
   );

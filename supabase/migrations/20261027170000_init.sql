@@ -30,7 +30,7 @@ alter table public.expenses enable row level security;
 revoke all on public.profiles from anon, authenticated;
 revoke all on public.expenses from anon, authenticated;
 
-grant select, update on public.profiles to authenticated;
+grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.expenses to authenticated;
 grant usage, select on sequence public.expenses_id_seq to authenticated;
 
@@ -39,6 +39,12 @@ create policy "Users read their own profile"
   for select
   to authenticated
   using (auth.uid() = id);
+
+create policy "Users insert their own profile"
+  on public.profiles
+  for insert
+  to authenticated
+  with check (auth.uid() = id);
 
 create policy "Users update their own profile"
   on public.profiles

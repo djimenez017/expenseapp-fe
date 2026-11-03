@@ -5,6 +5,14 @@ import formatDateExtension from "../lib/formatDateExtension";
 import Loading from "../UI/Loading";
 import { supabase } from "../lib/supabase";
 import { formatDollars } from "../lib/leftover";
+import {
+  EXPENSE_KINDS,
+  aboveRecommendedUse,
+  cardUtilization,
+  formatUtilization,
+  tracksBalance,
+} from "../lib/expenseOptions";
+import TagChips from "../tags/tagChips";
 
 export default function ExpenseCard(props) {
   const [loading, setLoading] = useState(false);
@@ -15,14 +23,18 @@ export default function ExpenseCard(props) {
     props.remainingBalance == null || props.remainingBalance === ""
       ? null
       : Number(props.remainingBalance);
-  const paidOff = props.kind === "LOAN" && balance != null && balance <= 0;
-  const canRecordPayment = props.kind === "LOAN" && balance != null && balance > 0;
+  const paidOff = tracksBalance(props.kind) && balance != null && balance <= 0;
+  const canRecordPayment = tracksBalance(props.kind) && balance != null && balance > 0;
   const when = props.frequency.toLowerCase();
-  const ordinal = formatDateExtension(nextPayment.getDate() + 1);
+  const ordinal = formatDateExtension(nextPayment.getDate());
+  const kindLabel =
+    EXPENSE_KINDS.find((item) => item.value === props.kind)?.label || "Bill";
+  const used = cardUtilization(balance, props.creditLimit);
+  const highUse = aboveRecommendedUse(used);
   const lead =
     props.kind === "SUBSCRIPTION"
       ? "Renews"
-      : props.kind === "LOAN"
+      : tracksBalance(props.kind)
       ? "Next payment"
       : "Due";
 
@@ -74,23 +86,34 @@ export default function ExpenseCard(props) {
   if (loading) return <Loading />;
 
   return (
-    <article className="rounded-2xl border border-line bg-white px-4 py-4">
+    <article
+      className={`rounded-2xl border bg-white px-4 py-4 ${
+        highUse ? "border-danger" : "border-line"
+      }`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-2xl">{props.name}</h3>
           <p className="text-sm text-muted">
+            {props.showKind ? `${kindLabel} · ` : ""}
             {lead} {when}, every {ordinal}
-            {props.kind === "LOAN"
+            {tracksBalance(props.kind)
               ? ` · ${balance == null ? "balance open" : formatDollars(balance) + " left"}`
               : ""}
             {paidOff ? " · Paid off" : ""}
           </p>
+          <TagChips tags={props.tags} onSelect={props.onTagSelect} />
         </div>
         <p className="text-right text-xl">
           {formatDollars(props.amount)}
           <span className="mt-0.5 block text-xs font-bold uppercase tracking-widest text-muted">
             {props.frequency}
           </span>
+          {used != null && (
+            <span className={`mt-1 block text-sm font-bold ${highUse ? "text-danger" : "text-green"}`}>
+              {formatUtilization(used)} used
+            </span>
+          )}
         </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-4 text-sm font-bold">

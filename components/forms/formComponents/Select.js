@@ -1,4 +1,5 @@
 import React from "react";
+import { EXPENSE_FREQUENCIES } from "../../lib/expenseOptions";
 
 const field =
   "mt-1 w-full appearance-none rounded-2xl border border-line bg-white bg-[length:14px] bg-[right_1rem_center] bg-no-repeat px-4 py-3 pr-10 text-base font-normal text-ink outline-none focus:border-green bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2012%208%27%3E%3Cpath%20fill=%27%231e2a22%27%20d=%27M1%201l5%205%205-5%27/%3E%3C/svg%3E')]";
@@ -14,10 +15,11 @@ export default function Select(props) {
         onChange={props.onChange}
         value={props.value}
       >
-        <option value="DAILY">Daily</option>
-        <option value="WEEKLY">Weekly</option>
-        <option value="MONTHLY">Monthly</option>
-        <option value="YEARLY">Yearly</option>
+        {EXPENSE_FREQUENCIES.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
       </select>
     </label>
   );

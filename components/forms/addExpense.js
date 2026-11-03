@@ -3,14 +3,17 @@ import { useRouter } from "next/router";
 import Input from "../forms/formComponents/input";
 import Select from "../forms/formComponents/Select";
 import OptionSelect from "../forms/formComponents/OptionSelect";
+import TagField from "../forms/formComponents/TagField";
 import Submit from "../forms/formComponents/Submit";
 import Loading from "../UI/Loading";
 import { supabase } from "../lib/supabase";
 import ensureProfile from "../lib/ensureProfile";
+import { syncExpenseTags, useTagSuggestions } from "../lib/tags";
 import {
   EXPENSE_KINDS,
   amountFieldLabel,
   dateFieldLabel,
+  tracksBalance,
 } from "../lib/expenseOptions";
 
 export default function AddExpense() {
@@ -20,8 +23,11 @@ export default function AddExpense() {
   const [expenseFrequency, setExpenseFrequency] = useState("DAILY");
   const [expenseKind, setExpenseKind] = useState("BILL");
   const [remainingBalance, setRemainingBalance] = useState("");
+  const [creditLimit, setCreditLimit] = useState("");
+  const [tags, setTags] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { suggestions } = useTagSuggestions();
   const router = useRouter();
 
   const expenseSubmitHandler = async (e) => {
@@ -46,23 +52,47 @@ export default function AddExpense() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("expenses").insert({
+    const expense = {
       user_id: user.id,
       name: expenseName,
       amount: parseFloat(expenseAmount),
       frequency: expenseFrequency,
       kind: expenseKind,
-      remaining_balance:
-        expenseKind === "LOAN" ? parseFloat(remainingBalance) : null,
+      remaining_balance: tracksBalance(expenseKind) ? parseFloat(remainingBalance) : null,
       date_due: new Date(`${expenseDate}T00:00:00`).toISOString(),
-    });
+    };
 
-    setLoading(false);
+    if (expenseKind === "CREDIT_CARD") expense.credit_limit = parseFloat(creditLimit);
+
+    const { data: created, error: insertError } = await supabase
+      .from("expenses")
+      .insert(expense)
+      .select("id")
+      .single();
 
     if (insertError) {
+      setLoading(false);
       setError(insertError.message);
       return;
     }
+
+    const tagError = await syncExpenseTags(
+      user.id,
+      created.id,
+      tags.map((tag) => tag.name)
+    );
+
+    if (tagError) {
+      const { error: rollbackError } = await supabase
+        .from("expenses")
+        .delete()
+        .eq("id", created.id);
+      setLoading(false);
+      setError(rollbackError ? `${tagError.message} ${rollbackError.message}` : tagError.message);
+      return;
+    }
+
+    setLoading(false);
 
     router.push("/dashboard");
   };
@@ -98,6 +128,12 @@ export default function AddExpense() {
           >
             Type
           </OptionSelect>
+          <TagField
+            id="expenseTags"
+            value={tags}
+            suggestions={suggestions}
+            onChange={setTags}
+          />
           <Input
             htmlFor="amount"
             id="amount"
@@ -112,7 +148,7 @@ export default function AddExpense() {
           >
             {amountFieldLabel(expenseKind)}
           </Input>
-          {expenseKind === "LOAN" && (
+          {tracksBalance(expenseKind) && (
             <Input
               htmlFor="remainingBalance"
               id="remainingBalance"
@@ -127,6 +163,23 @@ export default function AddExpense() {
               pattern="\d+(\.\d{1,2})?"
             >
               Remaining balance
+            </Input>
+          )}
+          {expenseKind === "CREDIT_CARD" && (
+            <Input
+              htmlFor="creditLimit"
+              id="creditLimit"
+              required
+              onChange={(e) => setCreditLimit(e.target.value)}
+              type="number"
+              name="creditLimit"
+              value={creditLimit}
+              placeholder="0.00"
+              step="0.01"
+              min="0.01"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              Credit limit
             </Input>
           )}
 
