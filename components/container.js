@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import ExpenseCard from "./expenses/expenseCard";
-import Button from "./button";
+import Link from "next/link";
+import ExpenseRow from "./expenses/expenseCard";
 import Loading from "./UI/Loading";
-import UserInfo from "./dashboard/userInfo";
 import PaycheckSummary from "./dashboard/paycheckSummary";
 import SpendingLog from "./dashboard/spendingLog";
 import { supabase } from "./lib/supabase";
@@ -17,56 +16,55 @@ import {
 } from "./lib/expenseOptions";
 import { collectTags, hasTag, loadExpenses, loadSpending } from "./lib/tags";
 
-function ExpenseList({ expenses, onChanged, onTagSelect, showKind }) {
-  if (expenses.length === 0) return <p className="text-muted">None yet.</p>;
+const TABS = [
+  { id: "subscriptions", label: "Subscriptions", empty: "No subscriptions yet." },
+  { id: "bills", label: "Bills", empty: "No bills yet." },
+  { id: "loans", label: "Loans", empty: "No loans yet." },
+  { id: "creditCards", label: "Credit cards", empty: "No credit cards yet." },
+  { id: "spending", label: "Spending" },
+];
 
+function EmptyList({ text }) {
   return (
-    <div className="space-y-3">
-      {expenses.map((expense) => (
-        <ExpenseCard
-          key={expense.id}
-          name={expense.name}
-          amount={expense.amount}
-          frequency={expense.frequency}
-          dateDue={expense.date_due}
-          kind={expense.kind}
-          remainingBalance={expense.remaining_balance}
-          creditLimit={expense.credit_limit}
-          tags={expense.tags}
-          id={expense.id}
-          showKind={showKind}
-          onTagSelect={onTagSelect}
-          onDeleted={onChanged}
-        />
-      ))}
+    <div className="rounded-2xl border border-dashed border-line px-4 py-8 text-center">
+      <p className="text-sm text-muted">{text}</p>
+      <Link href="/addExpense">
+        <a className="mt-2 inline-block text-sm font-bold text-green hover:text-ink">Add an expense</a>
+      </Link>
     </div>
   );
 }
 
-function TagFilter({ tags, selectedId, onSelect }) {
-  if (tags.length === 0) return null;
+function ExpenseList({ expenses, onChanged, onTagSelect, showKind, empty }) {
+  if (expenses.length === 0) return <EmptyList text={empty || "Nothing here yet."} />;
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-3">
-      {tags.map((tag) => {
-        const selected = tag.id === selectedId;
-        return (
-          <button
-            key={tag.id}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onSelect(tag)}
-            className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm font-bold ${
-              selected
-                ? "border-ink bg-ink text-paper"
-                : "border-line bg-white text-muted hover:text-ink"
-            }`}
-          >
-            {tag.name}
-          </button>
-        );
-      })}
-    </div>
+    <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+      {expenses.map((expense) => (
+        <ExpenseRow
+          key={expense.id}
+          expense={expense}
+          showKind={showKind}
+          onTagSelect={onTagSelect}
+          onChanged={onChanged}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function Chip({ selected, onClick, children }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`min-h-[36px] whitespace-nowrap rounded-full px-3 text-sm font-bold transition-colors ${
+        selected ? "bg-ink text-paper" : "bg-white text-muted ring-1 ring-inset ring-line hover:text-ink"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -75,31 +73,7 @@ function scheduleInList(expenses, frequency) {
   return expenses.some((expense) => expense.frequency === frequency) ? frequency : "";
 }
 
-function FrequencyList({ expenses, frequency, onFrequency, onChanged, onTagSelect, showKind }) {
-  const active = scheduleInList(expenses, frequency);
-  const visible = filterByFrequency(expenses, active);
-  const label = EXPENSE_FREQUENCIES.find((item) => item.value === active)?.label.toLowerCase();
-
-  return (
-    <div className="space-y-4">
-      <FrequencyFilter expenses={expenses} value={active} onChange={onFrequency} />
-      {expenses.length > 0 && visible.length === 0 ? (
-        <p className="text-muted">No {label} expenses.</p>
-      ) : (
-        <ExpenseList
-          expenses={visible}
-          onChanged={onChanged}
-          onTagSelect={onTagSelect}
-          showKind={showKind}
-        />
-      )}
-    </div>
-  );
-}
-
 function FrequencyFilter({ expenses, value, onChange }) {
-  if (expenses.length === 0) return null;
-
   const present = EXPENSE_FREQUENCIES.map((item) => ({
     value: item.value,
     label: item.label,
@@ -111,26 +85,68 @@ function FrequencyFilter({ expenses, value, onChange }) {
   const options = [{ value: "", label: "All", count: expenses.length }, ...present];
 
   return (
-    <div className="flex gap-2 overflow-x-auto">
-      {options.map((item) => {
-        const selected = (value || "") === item.value;
-        return (
-          <button
-            key={item.value || "all"}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(item.value)}
-            className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm font-bold ${
-              selected
-                ? "border-ink bg-ink text-paper"
-                : "border-line bg-white text-muted hover:text-ink"
-            }`}
-          >
-            {item.label}
-            <span className="ml-2">{item.count}</span>
-          </button>
-        );
-      })}
+    <div className="flex gap-2" role="group" aria-label="Filter by schedule">
+      {options.map((item) => (
+        <Chip
+          key={item.value || "all"}
+          selected={(value || "") === item.value}
+          onClick={() => onChange(item.value)}
+        >
+          {item.label}
+          <span className="ml-1.5 font-normal opacity-70">{item.count}</span>
+        </Chip>
+      ))}
+    </div>
+  );
+}
+
+function TagSelect({ tags, value, onChange }) {
+  if (tags.length === 0) return null;
+
+  return (
+    <label className="relative shrink-0">
+      <span className="sr-only">Filter by tag</span>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+        className={`min-h-[36px] appearance-none rounded-full py-1 pl-3 pr-8 text-sm font-bold outline-none ${
+          value ? "bg-ink text-paper" : "bg-white text-muted ring-1 ring-inset ring-line"
+        }`}
+      >
+        <option value="">All tags</option>
+        {tags.map((tag) => (
+          <option key={tag.id} value={tag.id}>
+            {tag.name}
+          </option>
+        ))}
+      </select>
+      <svg
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        className={`pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 ${
+          value ? "text-paper" : "text-muted"
+        }`}
+      >
+        <path
+          d="M4 6l4 4 4-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </label>
+  );
+}
+
+function Toolbar({ filters, trailing }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="scroll-strip -ml-4 min-w-0 flex-1 overflow-x-auto pl-4 sm:ml-0 sm:pl-0">
+        {filters}
+      </div>
+      {trailing && <div className="shrink-0">{trailing}</div>}
     </div>
   );
 }
@@ -139,7 +155,11 @@ function CreditUtilization({ cards }) {
   const summary = combinedUtilization(cards);
   if (!summary) {
     if (cards.length === 0) return null;
-    return <p className="text-sm text-muted">Add a credit limit to see utilization.</p>;
+    return (
+      <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
+        Add a credit limit to a card to see how much of your credit you are using.
+      </p>
+    );
   }
 
   const high = aboveRecommendedUse(summary.rate);
@@ -147,24 +167,33 @@ function CreditUtilization({ cards }) {
   const target = Math.round(RECOMMENDED_UTILIZATION * 100);
 
   return (
-    <div className={`rounded-2xl border px-4 py-4 ${high ? "border-danger bg-white" : "border-line bg-white"}`}>
-      <div className="flex items-baseline justify-between gap-4">
-        <p className="text-sm font-bold uppercase tracking-widest text-muted">Utilization</p>
-        <p className={`text-3xl ${high ? "text-danger" : "text-green"}`}>
+    <div className="rounded-2xl border border-line bg-white px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3 className="font-semibold">Credit utilization</h3>
+        <p className={`text-2xl font-semibold tabular-nums ${high ? "text-danger" : "text-green"}`}>
           {formatUtilization(summary.rate)}
         </p>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper">
+      <div
+        className="relative mt-3 h-2 overflow-hidden rounded-full bg-paper"
+        role="img"
+        aria-label={`${formatUtilization(summary.rate)} of your total limit is in use`}
+      >
         <div
           className={`h-full rounded-full ${high ? "bg-danger" : "bg-green"}`}
           style={{ width: `${width}%` }}
         />
+        <span
+          className="absolute inset-y-0 w-px bg-ink/40"
+          style={{ left: `${target}%` }}
+          aria-hidden="true"
+        />
       </div>
-      <p className={`mt-2 text-sm font-bold ${high ? "text-danger" : "text-green"}`}>
-        {high ? `Above ${target}%` : `Within ${target}%`}
-        <span className="ml-2 font-normal text-muted">
-          {formatDollars(summary.balance)} of {formatDollars(summary.limit)}
-        </span>
+      <p className="mt-2 text-sm text-muted">
+        <span className={`font-bold ${high ? "text-danger" : "text-green"}`}>
+          {high ? `Above the ${target}% mark` : `Under the ${target}% mark`}
+        </span>{" "}
+        · {formatDollars(summary.balance)} of {formatDollars(summary.limit)}
       </p>
     </div>
   );
@@ -174,19 +203,15 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
   const [tab, setTab] = useState("subscriptions");
   const [tagId, setTagId] = useState(null);
   const [frequency, setFrequency] = useState("");
-  const subscriptions = expenses.filter((expense) => expense.kind === "SUBSCRIPTION");
-  const bills = expenses.filter((expense) => !expense.kind || expense.kind === "BILL");
-  const loans = expenses.filter((expense) => expense.kind === "LOAN");
-  const creditCards = expenses.filter((expense) => expense.kind === "CREDIT_CARD");
+  const groups = {
+    subscriptions: expenses.filter((expense) => expense.kind === "SUBSCRIPTION"),
+    bills: expenses.filter((expense) => !expense.kind || expense.kind === "BILL"),
+    loans: expenses.filter((expense) => expense.kind === "LOAN"),
+    creditCards: expenses.filter((expense) => expense.kind === "CREDIT_CARD"),
+  };
+  const counts = { ...Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, v.length])), spending: monthSpending.length };
   const tags = collectTags([expenses, spending]);
   const selectedTag = tags.find((tag) => tag.id === tagId) || null;
-  const tabs = [
-    { id: "subscriptions", label: "Subscriptions", count: subscriptions.length },
-    { id: "bills", label: "Bills", count: bills.length },
-    { id: "loans", label: "Loans", count: loans.length },
-    { id: "creditCards", label: "Credit cards", count: creditCards.length },
-    { id: "spending", label: "Spending", count: monthSpending.length },
-  ];
 
   const chooseTab = (id) => {
     setTagId(null);
@@ -197,17 +222,25 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
     setTagId((current) => (current === tag.id ? null : tag.id));
   };
 
-  const taggedExpenses = selectedTag ? expenses.filter((expense) => hasTag(expense, selectedTag.id)) : [];
+  const listed = selectedTag
+    ? expenses.filter((expense) => hasTag(expense, selectedTag.id))
+    : groups[tab] || [];
   const taggedSpending = selectedTag ? spending.filter((item) => hasTag(item, selectedTag.id)) : [];
-  const activeFrequency = scheduleInList(taggedExpenses, frequency);
-  const visibleTaggedExpenses = filterByFrequency(taggedExpenses, activeFrequency);
+  const activeFrequency = scheduleInList(listed, frequency);
+  const visible = filterByFrequency(listed, activeFrequency);
   const frequencyLabel =
     EXPENSE_FREQUENCIES.find((item) => item.value === activeFrequency)?.label.toLowerCase() || "";
+  const showFilters = tab !== "spending" || selectedTag;
+  const activeTab = TABS.find((item) => item.id === tab);
 
   return (
-    <section>
-      <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-line">
-        {tabs.map((item) => {
+    <section aria-label="Expenses" className="min-w-0 space-y-4">
+      <div
+        role="tablist"
+        aria-label="Expense type"
+        className="scroll-strip -mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0"
+      >
+        {TABS.map((item) => {
           const selected = !selectedTag && tab === item.id;
           return (
             <button
@@ -216,37 +249,54 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
               role="tab"
               aria-selected={selected}
               onClick={() => chooseTab(item.id)}
-              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-bold ${
+              className={`-mb-px min-h-[44px] whitespace-nowrap border-b-2 px-3 text-sm font-bold transition-colors sm:px-4 ${
                 selected ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
               }`}
             >
               {item.label}
-              <span className="ml-2">{item.count}</span>
+              <span className="ml-1.5 font-normal text-muted">{counts[item.id]}</span>
             </button>
           );
         })}
       </div>
-      <TagFilter tags={tags} selectedId={selectedTag?.id} onSelect={chooseTag} />
-      <div role="tabpanel" className="pt-5">
+
+      {(showFilters || tags.length > 0) && (
+        <Toolbar
+          filters={
+            showFilters && (
+              <FrequencyFilter expenses={listed} value={activeFrequency} onChange={setFrequency} />
+            )
+          }
+          trailing={
+            tags.length > 0 && (
+              <TagSelect tags={tags} value={selectedTag?.id} onChange={setTagId} />
+            )
+          }
+        />
+      )}
+
+      <div role="tabpanel" className="space-y-4">
         {selectedTag && (
-          <div className="space-y-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-muted">
-              {selectedTag.name}
-            </p>
-            <FrequencyFilter
-              expenses={taggedExpenses}
-              value={activeFrequency}
-              onChange={setFrequency}
-            />
-            {taggedExpenses.length === 0 && taggedSpending.length === 0 && (
-              <p className="text-muted">Nothing tagged {selectedTag.name}.</p>
+          <>
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="text-lg font-semibold">Tagged {selectedTag.name}</h2>
+              <button
+                type="button"
+                onClick={() => setTagId(null)}
+                className="text-sm font-bold text-green hover:text-ink"
+              >
+                Back to {activeTab?.label}
+              </button>
+            </div>
+            {listed.length === 0 && taggedSpending.length === 0 && (
+              <EmptyList text={`Nothing is tagged ${selectedTag.name}.`} />
             )}
-            {taggedExpenses.length > 0 && visibleTaggedExpenses.length === 0 && (
-              <p className="text-muted">No {frequencyLabel} expenses with this tag.</p>
+            {listed.length > 0 && visible.length === 0 && (
+              <p className="text-sm text-muted">No {frequencyLabel} expenses with this tag.</p>
             )}
-            {visibleTaggedExpenses.length > 0 && (
+            {visible.length > 0 && (
               <ExpenseList
-                expenses={visibleTaggedExpenses}
+                expenses={visible}
                 onChanged={onChanged}
                 onTagSelect={chooseTag}
                 showKind
@@ -262,47 +312,26 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
                 showKind
               />
             )}
-          </div>
+          </>
         )}
-        {!selectedTag && tab === "subscriptions" && (
-          <FrequencyList
-            expenses={subscriptions}
-            frequency={frequency}
-            onFrequency={setFrequency}
-            onChanged={onChanged}
-            onTagSelect={chooseTag}
-          />
+
+        {!selectedTag && tab === "creditCards" && <CreditUtilization cards={groups.creditCards} />}
+
+        {!selectedTag && tab !== "spending" && (
+          <>
+            {listed.length > 0 && visible.length === 0 ? (
+              <p className="text-sm text-muted">No {frequencyLabel} expenses.</p>
+            ) : (
+              <ExpenseList
+                expenses={visible}
+                onChanged={onChanged}
+                onTagSelect={chooseTag}
+                empty={activeTab?.empty}
+              />
+            )}
+          </>
         )}
-        {!selectedTag && tab === "bills" && (
-          <FrequencyList
-            expenses={bills}
-            frequency={frequency}
-            onFrequency={setFrequency}
-            onChanged={onChanged}
-            onTagSelect={chooseTag}
-          />
-        )}
-        {!selectedTag && tab === "loans" && (
-          <FrequencyList
-            expenses={loans}
-            frequency={frequency}
-            onFrequency={setFrequency}
-            onChanged={onChanged}
-            onTagSelect={chooseTag}
-          />
-        )}
-        {!selectedTag && tab === "creditCards" && (
-          <div className="space-y-4">
-            <CreditUtilization cards={creditCards} />
-            <FrequencyList
-              expenses={creditCards}
-              frequency={frequency}
-              onFrequency={setFrequency}
-              onChanged={onChanged}
-              onTagSelect={chooseTag}
-            />
-          </div>
-        )}
+
         {!selectedTag && tab === "spending" && (
           <SpendingLog
             items={monthSpending}
@@ -316,10 +345,62 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4">
+      <path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function DashboardView({ name, expenses, paycheck, spending, onChanged }) {
+  const summary = leftoverSummary({ paycheck, expenses, spending });
+  const monthSpending = spending.filter((item) => isInMonth(item.spent_on));
+  const firstName = String(name || "").trim().split(/\s+/)[0];
+
+  return (
+    <main className="board">
+      <div className="mb-5 flex items-center justify-between gap-4 lg:mb-6">
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-semibold text-ink sm:text-3xl">
+            {firstName ? `Hi, ${firstName}` : "Your money"}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted">
+            {expenses.length} {expenses.length === 1 ? "expense" : "expenses"} tracked
+          </p>
+        </div>
+        <Link href="/addExpense" passHref>
+          <a className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full bg-green px-4 font-bold text-white transition-colors hover:bg-ink sm:px-5">
+            <PlusIcon />
+            <span>
+              Add<span className="hidden sm:inline"> expense</span>
+            </span>
+          </a>
+        </Link>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <PaycheckSummary
+          paycheck={paycheck}
+          summary={summary}
+          expenses={expenses}
+          spending={spending}
+        />
+        <ExpenseTabs
+          expenses={expenses}
+          spending={spending}
+          monthSpending={monthSpending}
+          onChanged={onChanged}
+        />
+      </div>
+    </main>
+  );
+}
+
 export default function Container() {
   const [expenses, setExpenses] = useState(null);
   const [paycheck, setPaycheck] = useState(null);
   const [spending, setSpending] = useState([]);
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
@@ -347,7 +428,25 @@ export default function Container() {
   };
 
   useEffect(() => {
+    let active = true;
     loadDashboard();
+
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (active) setName(profile?.full_name || user.user_metadata?.full_name || "");
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (!expenses) return <Loading />;
@@ -359,25 +458,13 @@ export default function Container() {
     );
   }
 
-  const summary = leftoverSummary({ paycheck, expenses, spending });
-  const monthSpending = spending.filter((item) => isInMonth(item.spent_on));
-
   return (
-    <main className="board space-y-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <UserInfo />
-        <div className="grid w-full grid-cols-2 gap-3 sm:w-72">
-          <Button to="/addExpense">Add expense</Button>
-          <Button to="/details" variant="quiet">Details</Button>
-        </div>
-      </div>
-      <PaycheckSummary paycheck={paycheck} summary={summary} expenses={expenses} />
-      <ExpenseTabs
-        expenses={expenses}
-        spending={spending}
-        monthSpending={monthSpending}
-        onChanged={loadDashboard}
-      />
-    </main>
+    <DashboardView
+      name={name}
+      expenses={expenses}
+      paycheck={paycheck}
+      spending={spending}
+      onChanged={loadDashboard}
+    />
   );
 }

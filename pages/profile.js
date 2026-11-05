@@ -4,6 +4,7 @@ import Footer from "../components/Navigation/footer";
 import Session from "../components/hoc/session";
 import Title from "../components/UI/Title";
 import Loading from "../components/UI/Loading";
+import BackLink from "../components/UI/BackLink";
 import PaycheckForm from "../components/forms/paycheckForm";
 import DeleteAccount from "../components/profile/deleteAccount";
 import { supabase } from "../components/lib/supabase";
@@ -55,24 +56,24 @@ export default function Profile() {
   return (
     <Session>
       <Navigation />
-      <main className="board space-y-8">
-        <Title>Profile</Title>
+      <main className="board space-y-5">
+        <div>
+          <BackLink />
+          <Title>Profile</Title>
+        </div>
         {error && <p className="panel text-danger">{error}</p>}
         {!account && !error && <Loading />}
         {account && (
-          <div className="grid items-start gap-8 lg:grid-cols-2">
-            <div className="space-y-8">
-              <section className="panel">
-                <p className="text-sm font-bold uppercase tracking-widest text-muted">Account</p>
-                <h2 className="mt-1 text-3xl">{account.fullName}</h2>
-                <p className="mt-2 text-muted">{account.email}</p>
-              </section>
-              <DeleteAccount email={account.email} />
-            </div>
-            <section className="space-y-3">
-              <h2 className="text-2xl">Paycheck</h2>
+          <div className="grid items-start gap-5 lg:grid-cols-2">
+            <section className="panel" aria-label="Account">
+              <h2 className="text-xl font-semibold">{account.fullName}</h2>
+              <p className="mt-1 break-all text-muted">{account.email}</p>
+            </section>
+            <section className="space-y-3 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+              <h2 className="text-lg font-semibold">Paycheck</h2>
               <PaycheckForm redirectTo={null} />
             </section>
+            <DeleteAccount email={account.email} />
           </div>
         )}
       </main>

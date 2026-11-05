@@ -1,4 +1,5 @@
 import React from "react";
+import { formatDollars } from "../lib/leftover";
 
 export default function YearlyTotal({
   dailyAmount,
@@ -12,9 +13,9 @@ export default function YearlyTotal({
     Number(monthlyAmount) * 12 +
     Number(yearlyAmount);
   return (
-    <div className="rounded-3xl bg-clay px-6 py-5 text-white">
-      <p className="text-sm uppercase tracking-widest text-white/80">A year of bills</p>
-      <p className="mt-1 text-4xl">${totalPerYear.toFixed(2)}</p>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-ink px-4 py-4 text-white sm:px-5">
+      <p className="text-white/80">Bills over a full year</p>
+      <p className="text-2xl font-semibold tabular-nums sm:text-3xl">{formatDollars(totalPerYear)}</p>
     </div>
   );
 }

@@ -6,7 +6,9 @@ function Row({ label, value, strong }) {
   return (
     <div className={`flex items-baseline justify-between gap-4 py-2 ${strong ? "border-t border-line pt-3" : ""}`}>
       <span className={strong ? "font-bold" : "text-muted"}>{label}</span>
-      <span className={strong ? "text-2xl" : "font-bold"}>{formatDollars(value)}</span>
+      <span className={`tabular-nums ${strong ? "text-xl font-semibold" : "font-bold"}`}>
+        {formatDollars(value)}
+      </span>
     </div>
   );
 }
@@ -14,7 +16,7 @@ function Row({ label, value, strong }) {
 export default function LeftoverSummary({ paycheck, summary }) {
   return (
     <div className="panel">
-      <h2 className="text-2xl">Month and year</h2>
+      <h2 className="text-lg font-semibold">Month and year</h2>
       <div className="mt-3">
         <Row label="Monthly bills" value={summary.billsMonth} />
         <Row label="Spending this month" value={summary.spendMonth} />

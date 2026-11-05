@@ -3,9 +3,9 @@ import NavigationBar from "../components/Navigation/navigationBar";
 import Footer from "../components/Navigation/footer";
 import Session from "../components/hoc/session";
 import Loading from "../components/UI/Loading";
-import UserInfo from "../components/dashboard/userInfo";
 import Tile from "../components/UI/Tile";
-import Link from "next/link";
+import Title from "../components/UI/Title";
+import BackLink from "../components/UI/BackLink";
 import YearlyTotal from "../components/UI/YearlyTotal";
 import LeftoverSummary from "../components/UI/LeftoverSummary";
 import { PaycheckCheck } from "../components/dashboard/paycheckSummary";
@@ -67,31 +67,36 @@ function DetailsBody() {
       <div className="w-full ">
         <NavigationBar />
 
-        <main className="board space-y-6">
-          <UserInfo />
-          <Link href="/dashboard">
-            <a className="text-sm font-bold text-green hover:text-ink">Back to dashboard</a>
-          </Link>
-          <div className="grid items-start gap-6 lg:grid-cols-2">
+        <main className="board space-y-5">
+          <div>
+            <BackLink />
+            <Title>Details</Title>
+          </div>
+          <section aria-labelledby="schedule-totals" className="overflow-hidden rounded-2xl border border-line bg-white">
+            <h2 id="schedule-totals" className="px-4 py-3 text-lg font-semibold sm:px-5">
+              Bills by schedule
+            </h2>
+            <dl className="grid grid-cols-2 gap-px border-t border-line bg-line lg:grid-cols-4">
+              <Tile frequency="Daily" amount={dailyAmount} />
+              <Tile frequency="Weekly" amount={weeklyAmount} />
+              <Tile frequency="Monthly" amount={monthlyAmount} />
+              <Tile frequency="Yearly" amount={yearlyAmount} />
+            </dl>
+            <YearlyTotal
+              dailyAmount={dailyAmount}
+              weeklyAmount={weeklyAmount}
+              monthlyAmount={monthlyAmount}
+              yearlyAmount={yearlyAmount}
+            />
+          </section>
+          <div className="grid items-start gap-5 lg:grid-cols-2">
+            <LeftoverSummary paycheck={paycheck} summary={summary} />
             {paycheck && (
               <div className="panel">
-                <PaycheckCheck paycheck={paycheck} expenses={expenses} />
+                <PaycheckCheck paycheck={paycheck} expenses={expenses} spending={spending} />
               </div>
             )}
-            <LeftoverSummary paycheck={paycheck} summary={summary} />
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Tile frequency="Daily" amount={dailyAmount.toFixed(2)} />
-            <Tile frequency="Weekly" amount={weeklyAmount.toFixed(2)} />
-            <Tile frequency="Monthly" amount={monthlyAmount.toFixed(2)} />
-            <Tile frequency="Yearly" amount={yearlyAmount.toFixed(2)} />
-          </div>
-          <YearlyTotal
-            dailyAmount={dailyAmount}
-            weeklyAmount={weeklyAmount}
-            monthlyAmount={monthlyAmount}
-            yearlyAmount={yearlyAmount}
-          />
         </main>
 
         <Footer />

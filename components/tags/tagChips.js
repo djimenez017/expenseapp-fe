@@ -4,7 +4,7 @@ export default function TagChips({ tags, onSelect }) {
   if (!tags || tags.length === 0) return null;
 
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
+    <>
       {tags.map((tag) => (
         <button
           key={tag.id || tag.name}
@@ -14,11 +14,11 @@ export default function TagChips({ tags, onSelect }) {
             e.stopPropagation();
             if (onSelect) onSelect(tag);
           }}
-          className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs font-bold text-ink hover:border-ink"
+          className="relative rounded-full bg-paper px-2.5 py-1 text-xs font-bold text-ink transition-colors after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:bg-line"
         >
           {tag.name}
         </button>
       ))}
-    </div>
+    </>
   );
 }

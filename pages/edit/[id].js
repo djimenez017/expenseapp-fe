@@ -19,6 +19,7 @@ import {
   tracksBalance,
 } from "../../components/lib/expenseOptions";
 import { loadExpense, syncExpenseTags, useTagSuggestions } from "../../components/lib/tags";
+import BackLink from "../../components/UI/BackLink";
 
 function toDateInput(value) {
   const date = new Date(value);
@@ -37,6 +38,8 @@ function EditExpenseForm() {
   const [error, setError] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [tags, setTags] = useState([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { suggestions } = useTagSuggestions();
   const { inputs, handleChange } = useForm(expense || {});
 
@@ -129,10 +132,26 @@ function EditExpenseForm() {
     router.push("/dashboard");
   };
 
+  const deleteExpense = async () => {
+    setDeleting(true);
+    setError("");
+
+    const { error: deleteError } = await supabase.from("expenses").delete().eq("id", expenseId);
+
+    if (deleteError) {
+      setDeleting(false);
+      setError(deleteError.message);
+      return;
+    }
+
+    router.push("/dashboard");
+  };
+
   return (
     <>
       <Navigation />
-      <main className="shell space-y-6">
+      <main className="shell space-y-5">
+        <BackLink />
         <Title>Edit expense</Title>
         {error && <p className="text-sm text-danger">{error}</p>}
         <form className="panel" autoComplete="off" onSubmit={saveExpense}>
@@ -147,91 +166,129 @@ function EditExpenseForm() {
           >
             Expense Name
           </Input>
-          <OptionSelect
-            htmlFor="kind"
-            name="kind"
-            id="kind"
-            value={inputs.kind || "BILL"}
-            onChange={handleChange}
-            options={EXPENSE_KINDS}
-          >
-            Type
-          </OptionSelect>
+          <div className="grid gap-x-4 sm:grid-cols-2">
+            <OptionSelect
+              htmlFor="kind"
+              name="kind"
+              id="kind"
+              value={inputs.kind || "BILL"}
+              onChange={handleChange}
+              options={EXPENSE_KINDS}
+            >
+              Type
+            </OptionSelect>
+            <Select
+              htmlFor="frequency"
+              name="frequency"
+              id="frequency"
+              value={inputs.frequency || "DAILY"}
+              onChange={handleChange}
+            >
+              Frequency
+            </Select>
+            <Input
+              htmlFor="amount"
+              id="amount"
+              required
+              type="number"
+              name="amount"
+              value={inputs.amount ?? ""}
+              onChange={handleChange}
+              placeholder="0.00"
+              step="0.01"
+              pattern="\d+(\.\d{1,2})?"
+            >
+              {amountFieldLabel(inputs.kind)}
+            </Input>
+            <Input
+              htmlFor="date"
+              id="date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            >
+              {dateFieldLabel(inputs.kind)}
+            </Input>
+            {tracksBalance(inputs.kind) && (
+              <Input
+                htmlFor="remainingBalance"
+                id="remaining_balance"
+                required
+                type="number"
+                name="remaining_balance"
+                value={inputs.remaining_balance ?? ""}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                pattern="\d+(\.\d{1,2})?"
+              >
+                Remaining balance
+              </Input>
+            )}
+            {inputs.kind === "CREDIT_CARD" && (
+              <Input
+                htmlFor="creditLimit"
+                id="credit_limit"
+                required
+                type="number"
+                name="credit_limit"
+                value={inputs.credit_limit ?? ""}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0.01"
+                pattern="\d+(\.\d{1,2})?"
+              >
+                Credit limit
+              </Input>
+            )}
+          </div>
           <TagField
             id="expenseTags"
             value={tags}
             suggestions={suggestions}
             onChange={setTags}
           />
-          <Input
-            htmlFor="amount"
-            id="amount"
-            required
-            type="number"
-            name="amount"
-            value={inputs.amount ?? ""}
-            onChange={handleChange}
-            placeholder="0.00"
-            step="0.01"
-            pattern="\d+(\.\d{1,2})?"
-          >
-            {amountFieldLabel(inputs.kind)}
-          </Input>
-          {tracksBalance(inputs.kind) && (
-            <Input
-              htmlFor="remainingBalance"
-              id="remaining_balance"
-              required
-              type="number"
-              name="remaining_balance"
-              value={inputs.remaining_balance ?? ""}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              pattern="\d+(\.\d{1,2})?"
-            >
-              Remaining balance
-            </Input>
-          )}
-          {inputs.kind === "CREDIT_CARD" && (
-            <Input
-              htmlFor="creditLimit"
-              id="credit_limit"
-              required
-              type="number"
-              name="credit_limit"
-              value={inputs.credit_limit ?? ""}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              min="0.01"
-              pattern="\d+(\.\d{1,2})?"
-            >
-              Credit limit
-            </Input>
-          )}
-          <Select
-            htmlFor="frequency"
-            name="frequency"
-            id="frequency"
-            value={inputs.frequency || "DAILY"}
-            onChange={handleChange}
-          >
-            Frequency
-          </Select>
-
-          <Input
-            htmlFor="date"
-            id="date"
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          >
-            {dateFieldLabel(inputs.kind)}
-          </Input>
-          <Submit />
+          <Submit>Save changes</Submit>
         </form>
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3 sm:px-5">
+          {confirmDelete ? (
+            <>
+              <p className="text-sm text-ink">
+                Delete <span className="font-bold">{expense.name}</span>? This cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="min-h-[40px] rounded-full px-4 text-sm font-bold text-muted hover:text-ink"
+                >
+                  Keep it
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={deleteExpense}
+                  className="min-h-[40px] rounded-full bg-danger px-4 text-sm font-bold text-white hover:bg-ink disabled:opacity-60"
+                >
+                  {deleting ? "Deleting…" : "Delete"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted">No longer paying for this?</p>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="min-h-[40px] rounded-full px-4 text-sm font-bold text-danger ring-1 ring-inset ring-danger/40 hover:bg-danger hover:text-white"
+              >
+                Delete expense
+              </button>
+            </>
+          )}
+        </section>
       </main>
       <Footer />
     </>

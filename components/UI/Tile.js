@@ -1,10 +1,13 @@
 import React from "react";
+import { formatDollars } from "../lib/leftover";
 
 export default function Tile({ frequency, amount }) {
   return (
-    <div className="min-w-[9rem] flex-1 rounded-2xl border border-line bg-white px-4 py-3">
-      <p className="text-xs font-bold uppercase tracking-widest text-muted">{frequency}</p>
-      <p className="mt-1 text-2xl">${amount}</p>
+    <div className="bg-white px-4 py-3 sm:px-5 sm:py-4">
+      <dt className="text-sm text-muted">{frequency}</dt>
+      <dd className="mt-0.5 text-xl font-semibold tabular-nums sm:text-2xl">
+        {formatDollars(amount)}
+      </dd>
     </div>
   );
 }

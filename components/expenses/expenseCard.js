@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import formatDate from "../lib/formatDate";
-import formatDateExtension from "../lib/formatDateExtension";
-import Loading from "../UI/Loading";
 import { supabase } from "../lib/supabase";
-import { formatDollars } from "../lib/leftover";
+import { formatDollars, formatDueDay, nextDueDate } from "../lib/leftover";
 import {
+  EXPENSE_FREQUENCIES,
   EXPENSE_KINDS,
   aboveRecommendedUse,
   cardUtilization,
@@ -14,122 +12,132 @@ import {
 } from "../lib/expenseOptions";
 import TagChips from "../tags/tagChips";
 
-export default function ExpenseCard(props) {
-  const [loading, setLoading] = useState(false);
+export function MetaLine({ parts }) {
+  const shown = parts.filter((part) => part && part.text);
+  if (shown.length === 0) return null;
+  const onDesktop = shown.some((part) => !part.mobileOnly);
+  let desktopBefore = false;
+
+  return (
+    <p className={`mt-0.5 text-sm text-muted ${onDesktop ? "" : "md:hidden"}`}>
+      {shown.map((part, index) => {
+        const separatorOnDesktop = !part.mobileOnly && desktopBefore;
+        if (!part.mobileOnly) desktopBefore = true;
+        return (
+          <span key={part.key} className={part.mobileOnly ? "md:hidden" : ""}>
+            {index > 0 && <span className={separatorOnDesktop ? "" : "md:hidden"}> · </span>}
+            <span className={`whitespace-nowrap ${part.className || ""}`}>{part.text}</span>
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
+function duePhrase(kind, frequency, date) {
+  if (frequency === "DAILY") return "Every day";
+  if (!date) return "";
+  const when = formatDueDay(date);
+  if (kind === "SUBSCRIPTION") return `Renews ${when}`;
+  if (tracksBalance(kind)) return `Next payment ${when}`;
+  return `Due ${when}`;
+}
+
+export default function ExpenseRow({ expense, showKind, onTagSelect, onChanged }) {
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const nextPayment = formatDate(props.frequency, new Date(props.dateDue));
+  const kind = expense.kind || "BILL";
   const balance =
-    props.remainingBalance == null || props.remainingBalance === ""
+    expense.remaining_balance == null || expense.remaining_balance === ""
       ? null
-      : Number(props.remainingBalance);
-  const paidOff = tracksBalance(props.kind) && balance != null && balance <= 0;
-  const canRecordPayment = tracksBalance(props.kind) && balance != null && balance > 0;
-  const when = props.frequency.toLowerCase();
-  const ordinal = formatDateExtension(nextPayment.getDate());
-  const kindLabel =
-    EXPENSE_KINDS.find((item) => item.value === props.kind)?.label || "Bill";
-  const used = cardUtilization(balance, props.creditLimit);
+      : Number(expense.remaining_balance);
+  const hasBalance = tracksBalance(kind);
+  const paidOff = hasBalance && balance != null && balance <= 0;
+  const canRecordPayment = hasBalance && balance != null && balance > 0;
+  const used = kind === "CREDIT_CARD" ? cardUtilization(balance, expense.credit_limit) : null;
   const highUse = aboveRecommendedUse(used);
-  const lead =
-    props.kind === "SUBSCRIPTION"
-      ? "Renews"
-      : tracksBalance(props.kind)
-      ? "Next payment"
-      : "Due";
+  const kindLabel = EXPENSE_KINDS.find((item) => item.value === kind)?.label || "Bill";
+  const schedule =
+    EXPENSE_FREQUENCIES.find((item) => item.value === expense.frequency)?.label || expense.frequency;
+  const due = duePhrase(kind, expense.frequency, nextDueDate(expense));
 
-  const deleteHandler = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const recordPayment = async () => {
+    setBusy(true);
     setError("");
 
-    const { error: deleteError } = await supabase
-      .from("expenses")
-      .delete()
-      .eq("id", props.id);
-
-    setLoading(false);
-
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
-    }
-
-    if (props.onDeleted) props.onDeleted();
-  };
-
-  const recordPayment = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const nextBalance = Math.max(
-      0,
-      Math.round((balance - Number(props.amount)) * 100) / 100
-    );
-
+    const nextBalance = Math.max(0, Math.round((balance - Number(expense.amount)) * 100) / 100);
     const { error: updateError } = await supabase
       .from("expenses")
       .update({ remaining_balance: nextBalance })
-      .eq("id", props.id);
+      .eq("id", expense.id);
 
-    setLoading(false);
+    setBusy(false);
 
     if (updateError) {
       setError(updateError.message);
       return;
     }
 
-    if (props.onDeleted) props.onDeleted();
+    if (onChanged) onChanged();
   };
 
-  if (loading) return <Loading />;
+  const balanceText = paidOff
+    ? "Paid off"
+    : balance == null
+    ? null
+    : kind === "CREDIT_CARD" && expense.credit_limit
+    ? `${formatDollars(balance)} of ${formatDollars(expense.credit_limit)}`
+    : `${formatDollars(balance)} left`;
 
   return (
-    <article
-      className={`rounded-2xl border bg-white px-4 py-4 ${
-        highUse ? "border-danger" : "border-line"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-2xl">{props.name}</h3>
-          <p className="text-sm text-muted">
-            {props.showKind ? `${kindLabel} · ` : ""}
-            {lead} {when}, every {ordinal}
-            {tracksBalance(props.kind)
-              ? ` · ${balance == null ? "balance open" : formatDollars(balance) + " left"}`
-              : ""}
-            {paidOff ? " · Paid off" : ""}
-          </p>
-          <TagChips tags={props.tags} onSelect={props.onTagSelect} />
-        </div>
-        <p className="text-right text-xl">
-          {formatDollars(props.amount)}
-          <span className="mt-0.5 block text-xs font-bold uppercase tracking-widest text-muted">
-            {props.frequency}
-          </span>
-          {used != null && (
-            <span className={`mt-1 block text-sm font-bold ${highUse ? "text-danger" : "text-green"}`}>
-              {formatUtilization(used)} used
-            </span>
+    <li className="relative px-4 py-3 transition-colors hover:bg-paper/50 sm:px-5">
+      <div className="flex items-start gap-4 md:grid md:grid-cols-[minmax(0,1fr)_11rem_9rem] md:items-center">
+        <div className="min-w-0 flex-1">
+          <Link href={`/edit/${expense.id}`}>
+            <a className="block truncate font-semibold text-ink after:absolute after:inset-0 after:content-['']">
+              {expense.name}
+            </a>
+          </Link>
+          <MetaLine
+            parts={[
+              showKind && { key: "kind", text: kindLabel },
+              { key: "due", text: due, mobileOnly: true },
+              balanceText && {
+                key: "balance",
+                text: balanceText,
+                className: paidOff ? "font-bold text-green" : "",
+              },
+              used != null && {
+                key: "used",
+                text: `${formatUtilization(used)} used`,
+                className: `font-bold ${highUse ? "text-danger" : "text-green"}`,
+              },
+            ]}
+          />
+          {(expense.tags?.length > 0 || canRecordPayment) && (
+            <div className="relative z-10 mt-2 flex flex-wrap items-center gap-2">
+              <TagChips tags={expense.tags} onSelect={onTagSelect} />
+              {canRecordPayment && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={recordPayment}
+                  className="rounded-full border border-green/30 px-3 py-1 text-xs font-bold text-green transition-colors hover:border-green hover:bg-green hover:text-white disabled:opacity-60"
+                >
+                  {busy ? "Saving…" : `Record ${formatDollars(expense.amount)} payment`}
+                </button>
+              )}
+            </div>
           )}
-        </p>
+          {error && <p className="relative z-10 mt-2 text-sm text-danger">{error}</p>}
+        </div>
+        <p className="hidden text-sm text-muted md:block">{due}</p>
+        <div className="shrink-0 text-right">
+          <p className="font-semibold tabular-nums text-ink">{formatDollars(expense.amount)}</p>
+          <p className="text-xs text-muted">{schedule}</p>
+        </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-4 text-sm font-bold">
-        <Link href={`/edit/${props.id}`}>
-          <a className="text-green hover:text-ink">Edit</a>
-        </Link>
-        {canRecordPayment && (
-          <button type="button" className="text-green hover:text-ink" onClick={recordPayment}>
-            Record payment
-          </button>
-        )}
-        <button type="button" className="text-clay hover:text-ink" onClick={deleteHandler}>
-          Delete
-        </button>
-      </div>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
-    </article>
+    </li>
   );
 }

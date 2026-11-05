@@ -37,7 +37,7 @@ export default function DeleteAccount({ email }) {
 
   return (
     <section className="panel border-danger/40">
-      <h2 className="text-2xl">Delete account</h2>
+      <h2 className="text-lg font-semibold">Delete account</h2>
       <p className="mt-2 text-muted">
         This removes your login, paycheck, bills, subscriptions, loans, and spending.
         Nothing is kept, and it cannot be undone.
@@ -46,7 +46,7 @@ export default function DeleteAccount({ email }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-danger px-5 py-3 font-bold text-danger transition hover:bg-danger hover:text-white"
+          className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-full border border-danger px-5 py-2.5 font-bold sm:w-auto text-danger transition hover:bg-danger hover:text-white"
         >
           Delete account
         </button>

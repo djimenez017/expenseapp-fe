@@ -197,6 +197,23 @@ function roundMoney(value) {
   return Math.round(Number(value) * 100) / 100;
 }
 
+function spendingInCheck(spending, received, end) {
+  let total = 0;
+  let count = 0;
+
+  (spending || []).forEach((row) => {
+    if (!row?.spent_on) return;
+    const date = parseSpentOn(row.spent_on);
+    if (compareDay(date, received) < 0 || compareDay(date, end) >= 0) return;
+    const amount = Number(row.amount || 0);
+    if (!amount) return;
+    total += amount;
+    count += 1;
+  });
+
+  return { amount: roundMoney(total), count };
+}
+
 function nextPaydayAfter(paycheck, payday) {
   if (paycheck.schedule === "SEMIMONTHLY") {
     const days = paydayDays(paycheck);
@@ -257,11 +274,17 @@ export function chargesThisCheck(paycheck, expenses, now = new Date()) {
   return chargesForPeriod(expenses, period, loanBalances(expenses));
 }
 
-export function upcomingChecks(paycheck, expenses, count = 4, now = new Date()) {
+export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), spending = []) {
   if (!paycheck || paycheck.amount == null || paycheck.amount === "") return [];
 
   let end = upcomingPayday(paycheck, now);
   if (!end) return [];
+
+  const today = startOfDay(now);
+  if (compareDay(end, today) === 0) {
+    const following = nextPaydayAfter(paycheck, end);
+    if (following) end = following;
+  }
 
   const balances = loanBalances(expenses);
   const checks = [];
@@ -272,12 +295,16 @@ export function upcomingChecks(paycheck, expenses, count = 4, now = new Date()) 
     const period = { start: addDays(previous, 1), end };
     const charges = chargesForPeriod(expenses, period, balances);
     const due = roundMoney(charges.reduce((total, charge) => total + charge.amount, 0));
+    const spent = spendingInCheck(spending, previous, end);
     checks.push({
       payday: end,
+      received: previous,
       period,
       charges,
       due,
-      left: roundMoney(Number(paycheck.amount) - due),
+      spending: spent.amount,
+      spendingCount: spent.count,
+      left: roundMoney(Number(paycheck.amount) - due - spent.amount),
       current: i === 0,
     });
     end = nextPaydayAfter(paycheck, end);
@@ -324,7 +351,7 @@ function closestPair(checks, today) {
   return picked.sort((a, b) => compareDay(a.payday, b.payday));
 }
 
-export function checksThisMonth(paycheck, expenses, now = new Date()) {
+export function checksThisMonth(paycheck, expenses, now = new Date(), spending = []) {
   if (!paycheck || paycheck.amount == null || paycheck.amount === "") return [];
 
   const today = startOfDay(now);
@@ -356,24 +383,32 @@ export function checksThisMonth(paycheck, expenses, now = new Date()) {
   ).map(({ period }) => {
     const charges = chargesForPeriod(expenses, period, balances);
     const due = roundMoney(charges.reduce((total, charge) => total + charge.amount, 0));
+    const received = addDays(period.start, -1);
+    const spent = spendingInCheck(spending, received, period.end);
     return {
       payday: period.end,
+      received,
       period,
       charges,
       due,
-      left: roundMoney(Number(paycheck.amount) - due),
-      current: compareDay(period.start, today) <= 0 && compareDay(today, period.end) <= 0,
+      spending: spent.amount,
+      spendingCount: spent.count,
+      left: roundMoney(Number(paycheck.amount) - due - spent.amount),
+      current: compareDay(received, today) <= 0 && compareDay(today, period.end) < 0,
     };
   });
 }
 
-export function paycheckBreakdown({ paycheck, expenses, now = new Date() }) {
-  const [current] = upcomingChecks(paycheck, expenses, 1, now);
+export function paycheckBreakdown({ paycheck, expenses, spending, now = new Date() }) {
+  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending);
   if (!current) return null;
   return {
     payday: current.payday,
+    received: current.received,
     charges: current.charges,
     due: current.due,
+    spending: current.spending,
+    spendingCount: current.spendingCount,
     left: current.left,
   };
 }
@@ -435,6 +470,35 @@ export function leftoverSummary({ paycheck, expenses, spending, now = new Date()
   };
 }
 
+const DOLLARS = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
 export function formatDollars(value) {
-  return `$${Number(value).toFixed(2)}`;
+  return DOLLARS.format(Number(value) || 0);
+}
+
+export function nextDueDate(expense, now = new Date()) {
+  if (!expense?.date_due) return null;
+  const today = startOfDay(now);
+  if (expense.frequency === "DAILY") return today;
+
+  let cursor = startOfDay(parseSpentOn(expense.date_due));
+  for (let i = 0; i < 2000 && compareDay(cursor, today) < 0; i += 1) {
+    const next = stepDueDate(cursor, expense.frequency, 1);
+    if (!next || compareDay(next, cursor) <= 0) return cursor;
+    cursor = next;
+  }
+
+  return cursor;
+}
+
+export function formatDueDay(date, now = new Date()) {
+  const days = Math.round((startOfDay(date).getTime() - startOfDay(now).getTime()) / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "tomorrow";
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
 }

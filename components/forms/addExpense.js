@@ -107,17 +107,18 @@ export default function AddExpense() {
         autoComplete="off"
         className="panel"
       >
-        <div>
-          <Input
-            htmlFor="ExpenseName"
-            id="ExpenseName"
-            required
-            onChange={(e) => setExpenseName(e.target.value)}
-            name="name"
-            value={expenseName}
-          >
-            Expense Name
-          </Input>
+        <Input
+          htmlFor="ExpenseName"
+          id="ExpenseName"
+          required
+          onChange={(e) => setExpenseName(e.target.value)}
+          name="name"
+          value={expenseName}
+          placeholder="Rent, Netflix, car loan"
+        >
+          Expense Name
+        </Input>
+        <div className="grid gap-x-4 sm:grid-cols-2">
           <OptionSelect
             htmlFor="kind"
             name="kind"
@@ -128,12 +129,15 @@ export default function AddExpense() {
           >
             Type
           </OptionSelect>
-          <TagField
-            id="expenseTags"
-            value={tags}
-            suggestions={suggestions}
-            onChange={setTags}
-          />
+          <Select
+            htmlFor="frequency"
+            name="frequency"
+            id="frequency"
+            value={expenseFrequency}
+            onChange={(e) => setExpenseFrequency(e.target.value)}
+          >
+            Frequency
+          </Select>
           <Input
             htmlFor="amount"
             id="amount"
@@ -147,6 +151,17 @@ export default function AddExpense() {
             pattern="\d+(\.\d{1,2})?"
           >
             {amountFieldLabel(expenseKind)}
+          </Input>
+          <Input
+            htmlFor="date"
+            id="date"
+            required
+            onChange={(e) => setExpenseDate(e.target.value)}
+            type="date"
+            name="date"
+            value={expenseDate}
+          >
+            {dateFieldLabel(expenseKind)}
           </Input>
           {tracksBalance(expenseKind) && (
             <Input
@@ -182,30 +197,14 @@ export default function AddExpense() {
               Credit limit
             </Input>
           )}
-
-          <Select
-            htmlFor="frequency"
-            name="frequency"
-            id="frequency"
-            value={expenseFrequency}
-            onChange={(e) => setExpenseFrequency(e.target.value)}
-          >
-            Frequency
-          </Select>
-          <Input
-            htmlFor="date"
-            id="date"
-            required
-            onChange={(e) => setExpenseDate(e.target.value)}
-            type="date"
-            name="date"
-            value={expenseDate}
-          >
-            {dateFieldLabel(expenseKind)}
-          </Input>
-
-          <Submit>Add expense</Submit>
         </div>
+        <TagField
+          id="expenseTags"
+          value={tags}
+          suggestions={suggestions}
+          onChange={setTags}
+        />
+        <Submit>Add expense</Submit>
       </form>
     </>
   );
