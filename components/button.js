@@ -14,8 +14,8 @@ export default function Button({ to, variant, size, wide = true, children }) {
   ].join(" ");
 
   return (
-    <Link href={`${to}`} passHref>
-      <a className={className}>{children}</a>
+    <Link href={`${to}`} className={className}>
+      {children}
     </Link>
   );
 }

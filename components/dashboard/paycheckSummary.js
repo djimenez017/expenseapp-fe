@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Button from "../button";
 import {
@@ -65,7 +65,7 @@ function Hint({ id, label, children, tone = "light", placement = "below", align 
     return () => window.removeEventListener(HINT_EVENT, onOther);
   }, [id]);
 
-  const place = () => {
+  const place = useCallback(() => {
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
     const width = Math.min(256, window.innerWidth - 24);
@@ -76,7 +76,7 @@ function Hint({ id, label, children, tone = "light", placement = "below", align 
     } else {
       setStyle({ position: "fixed", left, width, top: rect.bottom + 8 });
     }
-  };
+  }, [align, placement]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -99,7 +99,7 @@ function Hint({ id, label, children, tone = "light", placement = "below", align 
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [open, align, placement]);
+  }, [open, place]);
 
   return (
     <span className="inline-flex">
@@ -234,10 +234,11 @@ function CurrentCheck({ check, paycheck }) {
       <div className="bg-ink px-4 py-5 text-white sm:px-5">
         <div className="flex items-center justify-between gap-3 text-sm">
           <h2 className="font-semibold text-white/80">Paycheck on {formatShortDate(check.received)}</h2>
-          <Link href="/profile">
-            <a className="rounded-full px-2 py-1 font-bold text-white/80 hover:bg-white/10 hover:text-white">
-              Edit
-            </a>
+          <Link
+            href="/profile"
+            className="rounded-full px-2 py-1 font-bold text-white/80 hover:bg-white/10 hover:text-white"
+          >
+            Edit
           </Link>
         </div>
         <p className="mt-1 text-4xl font-semibold tabular-nums">{formatDollars(check.left)}</p>

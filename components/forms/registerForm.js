@@ -69,6 +69,7 @@ export default function RegisterForm() {
             onChange={(e) => setName(e.target.value)}
             type="text"
             value={name}
+            maxLength={80}
             required
           >
             Full Name

@@ -6,6 +6,7 @@ export default function DeleteAccount({ email }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [working, setWorking] = useState(false);
 
@@ -19,6 +20,18 @@ export default function DeleteAccount({ email }) {
     }
 
     setWorking(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setWorking(false);
+      setPassword("");
+      setError("That password does not match this account.");
+      return;
+    }
+
     const { error: deleteError } = await supabase.rpc("delete_own_account");
 
     if (deleteError) {
@@ -60,6 +73,18 @@ export default function DeleteAccount({ email }) {
               value={confirmEmail}
               onChange={(event) => setConfirmEmail(event.target.value)}
               placeholder={email}
+              required
+              className="mt-1 w-full rounded-2xl border border-line bg-white px-4 py-3 text-base font-normal text-ink outline-none focus:border-danger"
+            />
+          </label>
+          <label htmlFor="confirmPassword" className="mb-4 block text-sm font-bold text-muted">
+            Password
+            <input
+              id="confirmPassword"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               required
               className="mt-1 w-full rounded-2xl border border-line bg-white px-4 py-3 text-base font-normal text-ink outline-none focus:border-danger"
             />

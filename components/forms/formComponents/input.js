@@ -16,6 +16,7 @@ export default function input(props) {
         pattern={props.pattern}
         min={props.min}
         max={props.max}
+        maxLength={props.maxLength}
         required
       />
     </label>

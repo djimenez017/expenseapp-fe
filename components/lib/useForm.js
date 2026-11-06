@@ -7,6 +7,8 @@ export default function useForm(initial = {}) {
 
   useEffect(() => {
     setInputs(initial);
+    // initialValues is the snapshot of initial. Depending on the object would reset the form every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues]);
 
   function handleChange(e) {

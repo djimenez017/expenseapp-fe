@@ -153,6 +153,7 @@ export default function SpendingLog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Groceries, gas, coffee"
+                  maxLength={120}
                 >
                   Purchase
                 </Input>
@@ -167,6 +168,7 @@ export default function SpendingLog({
                 placeholder="0.00"
                 step="0.01"
                 min="0"
+                max="9999999999.99"
                 pattern="\d+(\.\d{1,2})?"
               >
                 Amount

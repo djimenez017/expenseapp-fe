@@ -115,6 +115,7 @@ export default function AddExpense() {
           name="name"
           value={expenseName}
           placeholder="Rent, Netflix, car loan"
+          maxLength={120}
         >
           Expense Name
         </Input>
@@ -148,6 +149,8 @@ export default function AddExpense() {
             value={expenseAmount}
             placeholder="0.00"
             step="0.01"
+            min="0"
+            max="9999999999.99"
             pattern="\d+(\.\d{1,2})?"
           >
             {amountFieldLabel(expenseKind)}

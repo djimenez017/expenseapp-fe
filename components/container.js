@@ -37,8 +37,8 @@ function EmptyList({ text }) {
   return (
     <div className="rounded-2xl border border-dashed border-line px-4 py-8 text-center">
       <p className="text-sm text-muted">{text}</p>
-      <Link href="/addExpense">
-        <a className="mt-2 inline-block text-sm font-bold text-green hover:text-ink">Add an expense</a>
+      <Link href="/addExpense" className="mt-2 inline-block text-sm font-bold text-green hover:text-ink">
+        Add an expense
       </Link>
     </div>
   );
@@ -441,13 +441,14 @@ export function DashboardView({ name, expenses, paycheck, spending, onChanged })
             {expenses.length} {expenses.length === 1 ? "expense" : "expenses"} tracked
           </p>
         </div>
-        <Link href="/addExpense" passHref>
-          <a className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full bg-green px-4 font-bold text-white transition-colors hover:bg-ink sm:px-5">
-            <PlusIcon />
-            <span>
-              Add<span className="hidden sm:inline"> expense</span>
-            </span>
-          </a>
+        <Link
+          href="/addExpense"
+          className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full bg-green px-4 font-bold text-white transition-colors hover:bg-ink sm:px-5"
+        >
+          <PlusIcon />
+          <span>
+            Add<span className="hidden sm:inline"> expense</span>
+          </span>
         </Link>
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:items-start lg:gap-8">

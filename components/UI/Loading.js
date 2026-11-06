@@ -1,9 +1,11 @@
-import { ThreeDots } from "react-loader-spinner";
-
 export default function Loading() {
   return (
-    <div className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center bg-paper/80">
-      <ThreeDots type="ThreeDots" color="#2f6b45" height={80} width={80} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/80">
+      <div
+        className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-green"
+        role="status"
+        aria-label="Loading"
+      />
     </div>
   );
 }

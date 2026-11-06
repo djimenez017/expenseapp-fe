@@ -16,13 +16,12 @@ export function MetaLine({ parts }) {
   const shown = parts.filter((part) => part && part.text);
   if (shown.length === 0) return null;
   const onDesktop = shown.some((part) => !part.mobileOnly);
-  let desktopBefore = false;
+  const firstDesktop = shown.findIndex((part) => !part.mobileOnly);
 
   return (
     <p className={`mt-0.5 text-sm text-muted ${onDesktop ? "" : "md:hidden"}`}>
       {shown.map((part, index) => {
-        const separatorOnDesktop = !part.mobileOnly && desktopBefore;
-        if (!part.mobileOnly) desktopBefore = true;
+        const separatorOnDesktop = !part.mobileOnly && index !== firstDesktop;
         return (
           <span key={part.key} className={part.mobileOnly ? "md:hidden" : ""}>
             {index > 0 && <span className={separatorOnDesktop ? "" : "md:hidden"}> · </span>}
@@ -94,10 +93,11 @@ export default function ExpenseRow({ expense, showKind, onTagSelect, onChanged }
     <li className="relative px-4 py-3 transition-colors hover:bg-paper/50 sm:px-5">
       <div className="flex items-start gap-4 md:grid md:grid-cols-[minmax(0,1fr)_11rem_9rem] md:items-center">
         <div className="min-w-0 flex-1">
-          <Link href={`/edit/${expense.id}`}>
-            <a className="block truncate font-semibold text-ink after:absolute after:inset-0 after:content-['']">
-              {expense.name}
-            </a>
+          <Link
+            href={`/edit/${expense.id}`}
+            className="block truncate font-semibold text-ink after:absolute after:inset-0 after:content-['']"
+          >
+            {expense.name}
           </Link>
           <MetaLine
             parts={[
