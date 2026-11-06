@@ -5,7 +5,16 @@ import Loading from "./UI/Loading";
 import PaycheckSummary from "./dashboard/paycheckSummary";
 import SpendingLog from "./dashboard/spendingLog";
 import { supabase } from "./lib/supabase";
-import { formatDollars, isInMonth, leftoverSummary } from "./lib/leftover";
+import {
+  dueThisMonth,
+  formatDollars,
+  isInMonth,
+  leftoverSummary,
+  payPeriodKey,
+  payPeriodLabel,
+  payPeriodsWithSpending,
+  spendingForPeriod,
+} from "./lib/leftover";
 import {
   EXPENSE_FREQUENCIES,
   RECOMMENDED_UTILIZATION,
@@ -17,7 +26,7 @@ import {
 import { collectTags, hasTag, loadExpenses, loadSpending } from "./lib/tags";
 
 const TABS = [
-  { id: "subscriptions", label: "Subscriptions", empty: "No subscriptions yet." },
+  { id: "subscriptions", label: "Subscriptions", empty: "Nothing renews this month." },
   { id: "bills", label: "Bills", empty: "No bills yet." },
   { id: "loans", label: "Loans", empty: "No loans yet." },
   { id: "creditCards", label: "Credit cards", empty: "No credit cards yet." },
@@ -97,6 +106,48 @@ function FrequencyFilter({ expenses, value, onChange }) {
         </Chip>
       ))}
     </div>
+  );
+}
+
+function PayPeriodSelect({ periods, value, onChange }) {
+  if (periods.length === 0) return null;
+  const current = periods.find((period) => period.current) || periods[0];
+  const selected = value || payPeriodKey(current);
+  const narrowed = selected !== payPeriodKey(current);
+
+  return (
+    <label className="relative shrink-0">
+      <span className="sr-only">Pay period</span>
+      <select
+        value={selected}
+        onChange={(event) => onChange(event.target.value)}
+        className={`min-h-[36px] min-w-[16.5rem] appearance-none rounded-full py-1 pl-3 pr-8 text-sm font-bold outline-none ${
+          narrowed ? "bg-ink text-paper" : "bg-white text-ink ring-1 ring-inset ring-line"
+        }`}
+      >
+        {periods.map((period) => (
+          <option key={payPeriodKey(period)} value={payPeriodKey(period)}>
+            {payPeriodLabel(period)}
+          </option>
+        ))}
+      </select>
+      <svg
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        className={`pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 ${
+          narrowed ? "text-paper" : "text-muted"
+        }`}
+      >
+        <path
+          d="M4 6l4 4 4-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </label>
   );
 }
 
@@ -199,17 +250,28 @@ function CreditUtilization({ cards }) {
   );
 }
 
-function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
+function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged }) {
   const [tab, setTab] = useState("subscriptions");
   const [tagId, setTagId] = useState(null);
   const [frequency, setFrequency] = useState("");
+  const [periodKey, setPeriodKey] = useState("");
+  const periods = payPeriodsWithSpending(paycheck, spending);
+  const currentPeriod = periods.find((period) => period.current) || periods[0];
+  const selectedPeriod =
+    periods.find((period) => payPeriodKey(period) === periodKey) || currentPeriod;
+  const periodSpending = selectedPeriod ? spendingForPeriod(spending, selectedPeriod) : monthSpending;
   const groups = {
-    subscriptions: expenses.filter((expense) => expense.kind === "SUBSCRIPTION"),
+    subscriptions: expenses.filter(
+      (expense) => expense.kind === "SUBSCRIPTION" && dueThisMonth(expense)
+    ),
     bills: expenses.filter((expense) => !expense.kind || expense.kind === "BILL"),
     loans: expenses.filter((expense) => expense.kind === "LOAN"),
     creditCards: expenses.filter((expense) => expense.kind === "CREDIT_CARD"),
   };
-  const counts = { ...Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, v.length])), spending: monthSpending.length };
+  const counts = {
+    ...Object.fromEntries(Object.entries(groups).map(([key, value]) => [key, value.length])),
+    spending: periodSpending.length,
+  };
   const tags = collectTags([expenses, spending]);
   const selectedTag = tags.find((tag) => tag.id === tagId) || null;
 
@@ -260,11 +322,15 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
         })}
       </div>
 
-      {(showFilters || tags.length > 0) && (
+      {(showFilters || tags.length > 0 || (tab === "spending" && periods.length > 0)) && (
         <Toolbar
           filters={
-            showFilters && (
-              <FrequencyFilter expenses={listed} value={activeFrequency} onChange={setFrequency} />
+            !selectedTag && tab === "spending" && periods.length > 0 ? (
+              <PayPeriodSelect periods={periods} value={periodKey} onChange={setPeriodKey} />
+            ) : (
+              showFilters && (
+                <FrequencyFilter expenses={listed} value={activeFrequency} onChange={setFrequency} />
+              )
             )
           }
           trailing={
@@ -334,10 +400,16 @@ function ExpenseTabs({ expenses, monthSpending, spending, onChanged }) {
 
         {!selectedTag && tab === "spending" && (
           <SpendingLog
-            items={monthSpending}
+            items={periodSpending}
             onChanged={onChanged}
             onTagSelect={chooseTag}
             hideHeading
+            totalLabel={selectedPeriod ? "This pay period" : "Total this month"}
+            emptyText={
+              selectedPeriod
+                ? "No purchases in this pay period."
+                : "No purchases this month yet. Log one to see it come out of the month."
+            }
           />
         )}
       </div>
@@ -389,6 +461,7 @@ export function DashboardView({ name, expenses, paycheck, spending, onChanged })
           expenses={expenses}
           spending={spending}
           monthSpending={monthSpending}
+          paycheck={paycheck}
           onChanged={onChanged}
         />
       </div>

@@ -3,7 +3,6 @@ import Input from "../forms/formComponents/input";
 import TagField from "../forms/formComponents/TagField";
 import Submit from "../forms/formComponents/Submit";
 import TagChips from "../tags/tagChips";
-import { MetaLine } from "../expenses/expenseCard";
 import { supabase } from "../lib/supabase";
 import ensureProfile from "../lib/ensureProfile";
 import { syncSpendingTags, useTagSuggestions } from "../lib/tags";
@@ -24,6 +23,8 @@ export default function SpendingLog({
   hideHeading,
   hideForm,
   showKind,
+  totalLabel = "Total this month",
+  emptyText = "No purchases this month yet. Log one to see it come out of the month.",
 }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -199,34 +200,52 @@ export default function SpendingLog({
       {hideForm && error && <p className="text-sm text-danger">{error}</p>}
       {items.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-line px-4 py-6 text-center text-sm text-muted">
-          No purchases this month yet. Log one to see it come out of the month.
+          {emptyText}
         </p>
       ) : (
-        <div>
-          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+        <div className="overflow-hidden rounded-2xl border border-line bg-white">
+          <div className="hidden border-b border-line bg-paper/70 px-5 py-2 text-xs font-semibold text-muted sm:grid sm:grid-cols-[5.5rem_minmax(0,1.6fr)_minmax(0,1fr)_6.5rem_4.5rem] sm:gap-x-3">
+            <span>Date</span>
+            <span>Description</span>
+            <span>Category</span>
+            <span className="text-right">Amount</span>
+            <span className="sr-only">Actions</span>
+          </div>
+          <ul className="divide-y divide-line">
             {items.map((item) => (
-              <li key={item.id} className="flex items-start gap-3 px-4 py-3 sm:px-5">
+              <li
+                key={item.id}
+                className="flex items-start gap-3 px-4 py-3 sm:grid sm:grid-cols-[5.5rem_minmax(0,1.6fr)_minmax(0,1fr)_6.5rem_4.5rem] sm:items-center sm:gap-x-3 sm:px-5"
+              >
+                <span className="hidden text-sm text-muted sm:block">
+                  {formatShortDate(item.spent_on)}
+                </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{item.name}</p>
-                  <MetaLine
-                    parts={[
-                      showKind && { key: "kind", text: "Spending" },
-                      { key: "date", text: formatShortDate(item.spent_on) },
-                    ]}
-                  />
+                  {showKind && <p className="mt-0.5 hidden text-sm text-muted sm:block">Spending</p>}
+                  <p className="mt-0.5 text-sm text-muted sm:hidden">
+                    {showKind ? `Spending · ${formatShortDate(item.spent_on)}` : formatShortDate(item.spent_on)}
+                  </p>
                   {item.tags?.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2 sm:hidden">
                       <TagChips tags={item.tags} onSelect={onTagSelect} />
                     </div>
                   )}
                 </div>
-                <span className="shrink-0 pt-px font-semibold tabular-nums">
+                <div className="hidden min-w-0 sm:block">
+                  {item.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      <TagChips tags={item.tags} onSelect={onTagSelect} />
+                    </div>
+                  )}
+                </div>
+                <span className="shrink-0 pt-px text-right font-semibold tabular-nums sm:pt-0">
                   {formatDollars(item.amount)}
                 </span>
                 <button
                   type="button"
                   aria-label={`Delete ${item.name}`}
-                  className="-my-1 -mr-2 shrink-0 rounded-full px-2 py-1 text-sm font-bold text-clay hover:bg-paper hover:text-ink"
+                  className="-my-1 -mr-2 shrink-0 justify-self-end rounded-full px-2 py-1 text-sm font-bold text-clay hover:bg-paper hover:text-ink sm:mr-0"
                   onClick={() => deleteSpending(item.id)}
                 >
                   Delete
@@ -235,9 +254,11 @@ export default function SpendingLog({
             ))}
           </ul>
           {!hideHeading || !hideForm ? (
-            <p className="mt-2 flex justify-between px-1 text-sm text-muted">
-              <span>Total this month</span>
-              <span className="font-semibold tabular-nums text-ink">{formatDollars(monthTotal)}</span>
+            <p className="flex items-baseline justify-between gap-4 border-t border-line px-4 py-4 text-base text-muted sm:px-5 sm:py-5">
+              <span>{totalLabel}</span>
+              <span className="text-2xl font-semibold tabular-nums text-ink">
+                {formatDollars(monthTotal)}
+              </span>
             </p>
           ) : null}
         </div>

@@ -214,6 +214,124 @@ function spendingInCheck(spending, received, end) {
   return { amount: roundMoney(total), count };
 }
 
+function slashDate(date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}/${day}/${date.getFullYear()}`;
+}
+
+export function payPeriodKey(period) {
+  const date = period.received;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export function payPeriodLabel(period) {
+  return `${slashDate(period.received)} - ${slashDate(period.end)}`;
+}
+
+export function payPeriods(paycheck, count = 6, now = new Date()) {
+  if (!paycheck?.schedule) return [];
+
+  let end = upcomingPayday(paycheck, now);
+  if (!end) return [];
+
+  const today = startOfDay(now);
+  if (compareDay(end, today) === 0) {
+    const following = nextPaydayAfter(paycheck, end);
+    if (following) end = following;
+  }
+
+  const periods = [];
+  for (let i = 0; i < count && end; i += 1) {
+    const received = previousPayday(paycheck, end);
+    if (!received) break;
+    periods.push({
+      received,
+      end,
+      current: compareDay(received, today) <= 0 && compareDay(today, end) < 0,
+    });
+    end = received;
+  }
+
+  return periods;
+}
+
+export function payPeriodsWithSpending(paycheck, spending, now = new Date()) {
+  if (!paycheck?.schedule) return [];
+
+  const dates = (spending || [])
+    .filter((row) => row?.spent_on)
+    .map((row) => parseSpentOn(row.spent_on));
+  let count = 8;
+  let periods = payPeriods(paycheck, count, now);
+
+  if (dates.length) {
+    const oldest = dates.reduce(
+      (min, date) => (compareDay(date, min) < 0 ? date : min),
+      dates[0]
+    );
+    while (
+      periods.length &&
+      compareDay(periods[periods.length - 1].received, oldest) > 0 &&
+      count < 60
+    ) {
+      count += 6;
+      periods = payPeriods(paycheck, count, now);
+    }
+  }
+
+  return periods.filter((period) => spendingForPeriod(spending, period).length > 0);
+}
+
+export function spendingForPeriod(spending, period) {
+  if (!period) return spending || [];
+  return (spending || []).filter((row) => {
+    if (!row?.spent_on) return false;
+    const date = parseSpentOn(row.spent_on);
+    return compareDay(date, period.received) >= 0 && compareDay(date, period.end) < 0;
+  });
+}
+
+export function spendingByCategory(rows) {
+  const totals = new Map();
+
+  (rows || []).forEach((row) => {
+    const amount = Number(row.amount || 0);
+    if (!amount) return;
+    const tags = row.tags?.length ? row.tags : [{ name: "Untagged" }];
+    const share = amount / tags.length;
+    tags.forEach((tag) => {
+      const name = tag.name || "Untagged";
+      totals.set(name, (totals.get(name) || 0) + share);
+    });
+  });
+
+  return [...totals.entries()]
+    .map(([name, amount]) => ({ name, amount: roundMoney(amount) }))
+    .filter((item) => item.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+}
+
+export function spendingByPeriod(paycheck, spending, now = new Date()) {
+  return payPeriodsWithSpending(paycheck, spending, now)
+    .slice()
+    .reverse()
+    .map((period) => ({
+      key: payPeriodKey(period),
+      label: slashDate(period.received).slice(0, 5),
+      amount: roundMoney(
+        spendingForPeriod(spending, period).reduce(
+          (total, row) => total + Number(row.amount || 0),
+          0
+        )
+      ),
+      current: period.current,
+      fullLabel: payPeriodLabel(period),
+    }));
+}
+
 function nextPaydayAfter(paycheck, payday) {
   if (paycheck.schedule === "SEMIMONTHLY") {
     const days = paydayDays(paycheck);
@@ -311,6 +429,27 @@ export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), 
   }
 
   return checks;
+}
+
+export function currentCheckSplit({ paycheck, expenses, spending, now = new Date() }) {
+  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending);
+  if (!current) return null;
+
+  const byKind = {};
+  current.charges.forEach((charge) => {
+    const kind = charge.kind || "BILL";
+    byKind[kind] = roundMoney((byKind[kind] || 0) + charge.amount);
+  });
+
+  return {
+    amount: Number(paycheck.amount),
+    due: current.due,
+    spending: current.spending,
+    left: current.left,
+    received: current.received,
+    payday: current.payday,
+    byKind,
+  };
 }
 
 function monthWithMostDays(period) {
@@ -474,6 +613,12 @@ const DOLLARS = new Intl.NumberFormat("en-US", { style: "currency", currency: "U
 
 export function formatDollars(value) {
   return DOLLARS.format(Number(value) || 0);
+}
+
+export function dueThisMonth(expense, now = new Date()) {
+  const due = nextDueDate(expense, now);
+  if (!due) return true;
+  return due.getFullYear() === now.getFullYear() && due.getMonth() === now.getMonth();
 }
 
 export function nextDueDate(expense, now = new Date()) {
