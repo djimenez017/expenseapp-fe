@@ -11,18 +11,20 @@ import LeftoverSummary from "../components/UI/LeftoverSummary";
 import { PaycheckCheck } from "../components/dashboard/paycheckSummary";
 import { supabase } from "../components/lib/supabase";
 import { leftoverSummary, sumByFrequency } from "../components/lib/leftover";
+import { loadTransfers } from "../components/lib/tags";
 
 function DetailsBody() {
   const [expenses, setExpenses] = useState(null);
   const [paycheck, setPaycheck] = useState(null);
   const [spending, setSpending] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
 
     (async () => {
-      const [expensesResult, paycheckResult, spendingResult] = await Promise.all([
+      const [expensesResult, paycheckResult, spendingResult, transfersResult] = await Promise.all([
         supabase
           .from("expenses")
           .select("id, name, amount, frequency, date_due, kind, remaining_balance"),
@@ -31,12 +33,16 @@ function DetailsBody() {
           .select("amount, schedule, next_payday, payday_one, payday_two")
           .maybeSingle(),
         supabase.from("spending").select("id, amount, spent_on"),
+        loadTransfers(),
       ]);
 
       if (!active) return;
 
       const queryError =
-        expensesResult.error || paycheckResult.error || spendingResult.error;
+        expensesResult.error ||
+        paycheckResult.error ||
+        spendingResult.error ||
+        transfersResult.error;
 
       if (queryError) {
         setError(queryError.message);
@@ -47,6 +53,7 @@ function DetailsBody() {
       setExpenses(expensesResult.data || []);
       setPaycheck(paycheckResult.data);
       setSpending(spendingResult.data || []);
+      setTransfers(transfersResult.data || []);
     })();
 
     return () => {
@@ -61,7 +68,7 @@ function DetailsBody() {
   const weeklyAmount = sumByFrequency(expenses, "WEEKLY");
   const monthlyAmount = sumByFrequency(expenses, "MONTHLY");
   const yearlyAmount = sumByFrequency(expenses, "YEARLY");
-  const summary = leftoverSummary({ paycheck, expenses, spending });
+  const summary = leftoverSummary({ paycheck, expenses, spending, transfers });
 
   return (
       <div className="w-full ">
@@ -93,7 +100,12 @@ function DetailsBody() {
             <LeftoverSummary paycheck={paycheck} summary={summary} />
             {paycheck && (
               <div className="panel">
-                <PaycheckCheck paycheck={paycheck} expenses={expenses} spending={spending} />
+                <PaycheckCheck
+                  paycheck={paycheck}
+                  expenses={expenses}
+                  spending={spending}
+                  transfers={transfers}
+                />
               </div>
             )}
           </div>

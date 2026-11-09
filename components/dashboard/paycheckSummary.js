@@ -150,7 +150,9 @@ function checkExplanation(check) {
   const until = formatShortDate(check.payday);
   const future = startOfDay(check.received) > startOfDay(new Date());
   const spending = check.spending ? ` and purchases logged since ${from}` : "";
-  return `This paycheck ${future ? "arrives" : "arrived"} on ${from} and lasts until ${until}. The amount left is the paycheck minus bills due before ${until}${spending}.`;
+  const sent = check.sent ? `, minus ${formatDollars(check.sent)} sent` : "";
+  const incoming = check.incoming ? `, plus ${formatDollars(check.incoming)} received` : "";
+  return `This paycheck ${future ? "arrives" : "arrived"} on ${from} and lasts until ${until}. The amount left is the paycheck minus bills due before ${until}${spending}${sent}${incoming}.`;
 }
 
 function monthPayPhrase(schedule) {
@@ -177,6 +179,26 @@ function Chevron({ open }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function TransferTotal({ id, label, hint, amount, count, noun }) {
+  if (!amount) return null;
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-t border-line py-2.5 text-sm">
+      <span className="min-w-0">
+        <span className="flex items-center">
+          <span className="font-semibold">{label}</span>
+          <Hint id={id} label={`What ${label.toLowerCase()} means`}>
+            {hint}
+          </Hint>
+        </span>
+        <span className="block text-muted">
+          {count} {count === 1 ? noun : `${noun}s`} since this paycheck
+        </span>
+      </span>
+      <span className="shrink-0 font-semibold tabular-nums">{formatDollars(amount)}</span>
+    </div>
   );
 }
 
@@ -274,6 +296,22 @@ function CurrentCheck({ check, paycheck }) {
           amount={check.spending}
           count={check.spendingCount}
         />
+        <TransferTotal
+          id={`sent-${check.payday.getTime()}`}
+          label="Sent"
+          hint="Money sent from a payment app since this paycheck. It comes out of the amount left."
+          amount={check.sent}
+          count={check.sentCount}
+          noun="transfer"
+        />
+        <TransferTotal
+          id={`received-${check.payday.getTime()}`}
+          label="Received"
+          hint="Money received in a payment app since this paycheck. It is added to the amount left."
+          amount={check.incoming}
+          count={check.incomingCount}
+          noun="transfer"
+        />
       </div>
     </div>
   );
@@ -319,14 +357,30 @@ function OtherCheck({ check }) {
         amount={check.spending}
         count={check.spendingCount}
       />
+      <TransferTotal
+        id={`sent-${check.payday.getTime()}`}
+        label="Sent"
+        hint="Money sent from a payment app since this paycheck. It comes out of the amount left."
+        amount={check.sent}
+        count={check.sentCount}
+        noun="transfer"
+      />
+      <TransferTotal
+        id={`received-${check.payday.getTime()}`}
+        label="Received"
+        hint="Money received in a payment app since this paycheck. It is added to the amount left."
+        amount={check.incoming}
+        count={check.incomingCount}
+        noun="transfer"
+      />
     </div>
   );
 }
 
-export function PaycheckCheck({ paycheck, expenses, spending }) {
+export function PaycheckCheck({ paycheck, expenses, spending, transfers = [] }) {
   if (!paycheck) return null;
 
-  const breakdown = paycheckBreakdown({ paycheck, expenses, spending });
+  const breakdown = paycheckBreakdown({ paycheck, expenses, spending, transfers });
   if (!breakdown) {
     return (
       <div className="space-y-3">
@@ -355,6 +409,22 @@ export function PaycheckCheck({ paycheck, expenses, spending }) {
           amount={breakdown.spending}
           count={breakdown.spendingCount}
         />
+        <TransferTotal
+          id="details-sent"
+          label="Sent"
+          hint="Money sent from a payment app since this paycheck. It comes out of the amount left."
+          amount={breakdown.sent}
+          count={breakdown.sentCount}
+          noun="transfer"
+        />
+        <TransferTotal
+          id="details-received"
+          label="Received"
+          hint="Money received in a payment app since this paycheck. It is added to the amount left."
+          amount={breakdown.incoming}
+          count={breakdown.incomingCount}
+          noun="transfer"
+        />
       </div>
     </div>
   );
@@ -372,7 +442,13 @@ function SetupPrompt({ text, action }) {
   );
 }
 
-export default function PaycheckSummary({ paycheck, summary, expenses, spending = [] }) {
+export default function PaycheckSummary({
+  paycheck,
+  summary,
+  expenses,
+  spending = [],
+  transfers = [],
+}) {
   if (!paycheck) {
     return (
       <SetupPrompt
@@ -382,7 +458,7 @@ export default function PaycheckSummary({ paycheck, summary, expenses, spending 
     );
   }
 
-  const checks = checksThisMonth(paycheck, expenses, new Date(), spending);
+  const checks = checksThisMonth(paycheck, expenses, new Date(), spending, transfers);
   const now = new Date();
   const monthLabel = now.toLocaleDateString("en-US", { month: "long" });
 

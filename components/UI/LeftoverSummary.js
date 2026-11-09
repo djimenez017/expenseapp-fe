@@ -20,8 +20,16 @@ export default function LeftoverSummary({ paycheck, summary }) {
       <div className="mt-3">
         <Row label="Monthly bills" value={summary.billsMonth} />
         <Row label="Spending this month" value={summary.spendMonth} />
+        {summary.sentMonth > 0 && <Row label="Sent this month" value={summary.sentMonth} />}
+        {summary.incomingMonth > 0 && (
+          <Row label="Received this month" value={summary.incomingMonth} />
+        )}
         <Row label="Yearly bills" value={summary.billsYear} />
         <Row label="Spending this year" value={summary.spendYear} />
+        {summary.sentYear > 0 && <Row label="Sent this year" value={summary.sentYear} />}
+        {summary.incomingYear > 0 && (
+          <Row label="Received this year" value={summary.incomingYear} />
+        )}
       </div>
       {paycheck ? (
         <div className="mt-2">

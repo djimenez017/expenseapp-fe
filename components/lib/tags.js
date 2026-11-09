@@ -77,6 +77,23 @@ export function loadSpending() {
   );
 }
 
+export async function loadTransfers() {
+  const result = await supabase
+    .from("transfers")
+    .select("id, expense_id, direction, amount, transferred_on")
+    .order("transferred_on", { ascending: false });
+
+  if (result.error) {
+    const message = `${result.error.message || ""} ${result.error.details || ""}`;
+    if (result.error.code === "PGRST205" || /transfers/i.test(message)) {
+      return { data: [], error: null };
+    }
+    return { data: [], error: result.error };
+  }
+
+  return { data: result.data || [], error: null };
+}
+
 export async function loadExpense(id) {
   let tagged = await supabase.from("expenses").select(EXPENSE_FIELDS).eq("id", id).maybeSingle();
 

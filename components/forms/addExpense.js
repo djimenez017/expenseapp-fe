@@ -13,8 +13,25 @@ import {
   EXPENSE_KINDS,
   amountFieldLabel,
   dateFieldLabel,
+  isPaymentApp,
   tracksBalance,
 } from "../lib/expenseOptions";
+
+const MONEY_DIRECTIONS = [
+  { value: "IN", label: "Money in" },
+  { value: "OUT", label: "Money out" },
+];
+
+function todayDate() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function roundMoney(value) {
+  return Math.round(Number(value) * 100) / 100;
+}
 
 export default function AddExpense() {
   const [expenseName, setExpenseName] = useState("");
@@ -23,6 +40,7 @@ export default function AddExpense() {
   const [expenseFrequency, setExpenseFrequency] = useState("DAILY");
   const [expenseKind, setExpenseKind] = useState("BILL");
   const [remainingBalance, setRemainingBalance] = useState("");
+  const [moneyDirection, setMoneyDirection] = useState("IN");
   const [creditLimit, setCreditLimit] = useState("");
   const [tags, setTags] = useState([]);
   const [error, setError] = useState("");
@@ -52,14 +70,29 @@ export default function AddExpense() {
       return;
     }
 
+    const paymentApp = isPaymentApp(expenseKind);
+    const movement = roundMoney(parseFloat(expenseAmount));
+    if (paymentApp && (!movement || movement <= 0)) {
+      setLoading(false);
+      setError("Enter an amount.");
+      return;
+    }
+
+    const moneyIn = moneyDirection === "IN";
     const expense = {
       user_id: user.id,
       name: expenseName,
-      amount: parseFloat(expenseAmount),
-      frequency: expenseFrequency,
+      amount: paymentApp ? 0 : parseFloat(expenseAmount),
+      frequency: paymentApp ? "MONTHLY" : expenseFrequency,
       kind: expenseKind,
-      remaining_balance: tracksBalance(expenseKind) ? parseFloat(remainingBalance) : null,
-      date_due: new Date(`${expenseDate}T00:00:00`).toISOString(),
+      remaining_balance: paymentApp
+        ? moneyIn
+          ? movement
+          : 0
+        : tracksBalance(expenseKind)
+          ? parseFloat(remainingBalance)
+          : null,
+      date_due: new Date(`${(paymentApp ? todayDate() : expenseDate)}T00:00:00`).toISOString(),
     };
 
     if (expenseKind === "CREDIT_CARD") expense.credit_limit = parseFloat(creditLimit);
@@ -90,6 +123,27 @@ export default function AddExpense() {
       setLoading(false);
       setError(rollbackError ? `${tagError.message} ${rollbackError.message}` : tagError.message);
       return;
+    }
+
+    if (paymentApp) {
+      const { error: transferError } = await supabase.from("transfers").insert({
+        user_id: user.id,
+        expense_id: created.id,
+        direction: moneyIn ? "RECEIVED" : "SENT",
+        amount: movement,
+        transferred_on: todayDate(),
+      });
+
+      if (transferError) {
+        await supabase.from("expenses").delete().eq("id", created.id);
+        setLoading(false);
+        setError(
+          /transfers|schema cache/i.test(transferError.message)
+            ? "Payment apps are not set up yet. Run the latest SQL migration, then try again."
+            : transferError.message
+        );
+        return;
+      }
     }
 
     setLoading(false);
@@ -130,15 +184,17 @@ export default function AddExpense() {
           >
             Type
           </OptionSelect>
-          <Select
-            htmlFor="frequency"
-            name="frequency"
-            id="frequency"
-            value={expenseFrequency}
-            onChange={(e) => setExpenseFrequency(e.target.value)}
-          >
-            Frequency
-          </Select>
+          {!isPaymentApp(expenseKind) && (
+            <Select
+              htmlFor="frequency"
+              name="frequency"
+              id="frequency"
+              value={expenseFrequency}
+              onChange={(e) => setExpenseFrequency(e.target.value)}
+            >
+              Frequency
+            </Select>
+          )}
           <Input
             htmlFor="amount"
             id="amount"
@@ -155,17 +211,31 @@ export default function AddExpense() {
           >
             {amountFieldLabel(expenseKind)}
           </Input>
-          <Input
-            htmlFor="date"
-            id="date"
-            required
-            onChange={(e) => setExpenseDate(e.target.value)}
-            type="date"
-            name="date"
-            value={expenseDate}
-          >
-            {dateFieldLabel(expenseKind)}
-          </Input>
+          {isPaymentApp(expenseKind) && (
+            <OptionSelect
+              htmlFor="moneyDirection"
+              name="moneyDirection"
+              id="moneyDirection"
+              value={moneyDirection}
+              onChange={(e) => setMoneyDirection(e.target.value)}
+              options={MONEY_DIRECTIONS}
+            >
+              Money
+            </OptionSelect>
+          )}
+          {!isPaymentApp(expenseKind) && (
+            <Input
+              htmlFor="date"
+              id="date"
+              required
+              onChange={(e) => setExpenseDate(e.target.value)}
+              type="date"
+              name="date"
+              value={expenseDate}
+            >
+              {dateFieldLabel(expenseKind)}
+            </Input>
+          )}
           {tracksBalance(expenseKind) && (
             <Input
               htmlFor="remainingBalance"

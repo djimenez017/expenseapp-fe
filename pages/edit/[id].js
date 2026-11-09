@@ -16,6 +16,7 @@ import {
   EXPENSE_KINDS,
   amountFieldLabel,
   dateFieldLabel,
+  isPaymentApp,
   tracksBalance,
 } from "../../components/lib/expenseOptions";
 import { loadExpense, syncExpenseTags, useTagSuggestions } from "../../components/lib/tags";
@@ -90,14 +91,18 @@ function EditExpenseForm() {
       return;
     }
 
+    const paymentApp = isPaymentApp(inputs.kind);
     const updates = {
       name: inputs.name,
-      amount: parseFloat(inputs.amount),
-      frequency: inputs.frequency,
+      amount: paymentApp ? 0 : parseFloat(inputs.amount),
+      frequency: paymentApp ? inputs.frequency || "MONTHLY" : inputs.frequency,
       kind: inputs.kind || "BILL",
-      remaining_balance:
-        tracksBalance(inputs.kind) ? parseFloat(inputs.remaining_balance) : null,
-      date_due: new Date(`${dueDate}T00:00:00`).toISOString(),
+      remaining_balance: paymentApp
+        ? expense.remaining_balance ?? 0
+        : tracksBalance(inputs.kind)
+          ? parseFloat(inputs.remaining_balance)
+          : null,
+      date_due: new Date(`${dueDate || toDateInput(new Date())}T00:00:00`).toISOString(),
     };
 
     if (inputs.kind === "CREDIT_CARD") {
@@ -177,38 +182,44 @@ function EditExpenseForm() {
             >
               Type
             </OptionSelect>
-            <Select
-              htmlFor="frequency"
-              name="frequency"
-              id="frequency"
-              value={inputs.frequency || "DAILY"}
-              onChange={handleChange}
-            >
-              Frequency
-            </Select>
-            <Input
-              htmlFor="amount"
-              id="amount"
-              required
-              type="number"
-              name="amount"
-              value={inputs.amount ?? ""}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              pattern="\d+(\.\d{1,2})?"
-            >
-              {amountFieldLabel(inputs.kind)}
-            </Input>
-            <Input
-              htmlFor="date"
-              id="date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            >
-              {dateFieldLabel(inputs.kind)}
-            </Input>
+            {!isPaymentApp(inputs.kind) && (
+              <Select
+                htmlFor="frequency"
+                name="frequency"
+                id="frequency"
+                value={inputs.frequency || "DAILY"}
+                onChange={handleChange}
+              >
+                Frequency
+              </Select>
+            )}
+            {!isPaymentApp(inputs.kind) && (
+              <Input
+                htmlFor="amount"
+                id="amount"
+                required
+                type="number"
+                name="amount"
+                value={inputs.amount ?? ""}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                pattern="\d+(\.\d{1,2})?"
+              >
+                {amountFieldLabel(inputs.kind)}
+              </Input>
+            )}
+            {!isPaymentApp(inputs.kind) && (
+              <Input
+                htmlFor="date"
+                id="date"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              >
+                {dateFieldLabel(inputs.kind)}
+              </Input>
+            )}
             {tracksBalance(inputs.kind) && (
               <Input
                 htmlFor="remainingBalance"

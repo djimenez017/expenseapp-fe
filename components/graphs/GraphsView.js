@@ -28,7 +28,9 @@ function paycheckRows(split) {
     barClass: row.barClass,
   })).filter((row) => row.amount > 0);
 
-  return [...payments, { name: "Spending", amount: split.spending, barClass: "bg-muted" }];
+  const rows = [...payments, { name: "Spending", amount: split.spending, barClass: "bg-muted" }];
+  if (split.sent > 0) rows.push({ name: "Sent", amount: split.sent, barClass: "bg-clay" });
+  return rows;
 }
 
 function categoryPeriods(paycheck, spending) {
@@ -82,14 +84,14 @@ function PeriodSelect({ periods, value, onChange }) {
   );
 }
 
-export default function GraphsView({ expenses, paycheck, spending }) {
+export default function GraphsView({ expenses, paycheck, spending, transfers = [] }) {
   const [periodKey, setPeriodKey] = useState("");
   const periods = categoryPeriods(paycheck, spending);
   const current = periods.find((period) => period.current) || periods[0];
   const selected = periods.find((period) => payPeriodKey(period) === periodKey) || current;
   const categories = selected ? spendingByCategory(spendingForPeriod(spending, selected)) : [];
   const periodBars = spendingByPeriod(paycheck, spending);
-  const split = currentCheckSplit({ paycheck, expenses, spending });
+  const split = currentCheckSplit({ paycheck, expenses, spending, transfers });
 
   return (
     <div className="space-y-5">

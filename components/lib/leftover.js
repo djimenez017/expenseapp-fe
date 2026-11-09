@@ -10,6 +10,7 @@ function tracksBalance(kind) {
 }
 
 export function countsTowardBills(expense) {
+  if (expense.kind === "PAYMENT_APP") return false;
   if (tracksBalance(expense.kind)) {
     if (expense.remaining_balance == null || expense.remaining_balance === "") {
       return true;
@@ -214,6 +215,41 @@ function spendingInCheck(spending, received, end) {
   return { amount: roundMoney(total), count };
 }
 
+function transfersInCheck(transfers, received, end) {
+  let sent = 0;
+  let incoming = 0;
+  let sentCount = 0;
+  let incomingCount = 0;
+
+  (transfers || []).forEach((row) => {
+    if (!row?.transferred_on) return;
+    const date = parseSpentOn(row.transferred_on);
+    if (compareDay(date, received) < 0 || compareDay(date, end) >= 0) return;
+    const amount = Number(row.amount || 0);
+    if (!amount) return;
+    if (row.direction === "RECEIVED") {
+      incoming += amount;
+      incomingCount += 1;
+    } else {
+      sent += amount;
+      sentCount += 1;
+    }
+  });
+
+  return {
+    sent: roundMoney(sent),
+    incoming: roundMoney(incoming),
+    sentCount,
+    incomingCount,
+  };
+}
+
+function moneyLeft(paycheckAmount, due, spent, moved) {
+  return roundMoney(
+    Number(paycheckAmount) + moved.incoming - due - spent - moved.sent
+  );
+}
+
 function slashDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -392,7 +428,14 @@ export function chargesThisCheck(paycheck, expenses, now = new Date()) {
   return chargesForPeriod(expenses, period, loanBalances(expenses));
 }
 
-export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), spending = []) {
+export function upcomingChecks(
+  paycheck,
+  expenses,
+  count = 4,
+  now = new Date(),
+  spending = [],
+  transfers = []
+) {
   if (!paycheck || paycheck.amount == null || paycheck.amount === "") return [];
 
   let end = upcomingPayday(paycheck, now);
@@ -414,6 +457,7 @@ export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), 
     const charges = chargesForPeriod(expenses, period, balances);
     const due = roundMoney(charges.reduce((total, charge) => total + charge.amount, 0));
     const spent = spendingInCheck(spending, previous, end);
+    const moved = transfersInCheck(transfers, previous, end);
     checks.push({
       payday: end,
       received: previous,
@@ -422,7 +466,11 @@ export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), 
       due,
       spending: spent.amount,
       spendingCount: spent.count,
-      left: roundMoney(Number(paycheck.amount) - due - spent.amount),
+      sent: moved.sent,
+      sentCount: moved.sentCount,
+      incoming: moved.incoming,
+      incomingCount: moved.incomingCount,
+      left: moneyLeft(paycheck.amount, due, spent.amount, moved),
       current: i === 0,
     });
     end = nextPaydayAfter(paycheck, end);
@@ -431,8 +479,14 @@ export function upcomingChecks(paycheck, expenses, count = 4, now = new Date(), 
   return checks;
 }
 
-export function currentCheckSplit({ paycheck, expenses, spending, now = new Date() }) {
-  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending);
+export function currentCheckSplit({
+  paycheck,
+  expenses,
+  spending,
+  transfers = [],
+  now = new Date(),
+}) {
+  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending, transfers);
   if (!current) return null;
 
   const byKind = {};
@@ -445,6 +499,8 @@ export function currentCheckSplit({ paycheck, expenses, spending, now = new Date
     amount: Number(paycheck.amount),
     due: current.due,
     spending: current.spending,
+    sent: current.sent,
+    incoming: current.incoming,
     left: current.left,
     received: current.received,
     payday: current.payday,
@@ -490,7 +546,13 @@ function closestPair(checks, today) {
   return picked.sort((a, b) => compareDay(a.payday, b.payday));
 }
 
-export function checksThisMonth(paycheck, expenses, now = new Date(), spending = []) {
+export function checksThisMonth(
+  paycheck,
+  expenses,
+  now = new Date(),
+  spending = [],
+  transfers = []
+) {
   if (!paycheck || paycheck.amount == null || paycheck.amount === "") return [];
 
   const today = startOfDay(now);
@@ -524,6 +586,7 @@ export function checksThisMonth(paycheck, expenses, now = new Date(), spending =
     const due = roundMoney(charges.reduce((total, charge) => total + charge.amount, 0));
     const received = addDays(period.start, -1);
     const spent = spendingInCheck(spending, received, period.end);
+    const moved = transfersInCheck(transfers, received, period.end);
     return {
       payday: period.end,
       received,
@@ -532,14 +595,24 @@ export function checksThisMonth(paycheck, expenses, now = new Date(), spending =
       due,
       spending: spent.amount,
       spendingCount: spent.count,
-      left: roundMoney(Number(paycheck.amount) - due - spent.amount),
+      sent: moved.sent,
+      sentCount: moved.sentCount,
+      incoming: moved.incoming,
+      incomingCount: moved.incomingCount,
+      left: moneyLeft(paycheck.amount, due, spent.amount, moved),
       current: compareDay(received, today) <= 0 && compareDay(today, period.end) < 0,
     };
   });
 }
 
-export function paycheckBreakdown({ paycheck, expenses, spending, now = new Date() }) {
-  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending);
+export function paycheckBreakdown({
+  paycheck,
+  expenses,
+  spending,
+  transfers = [],
+  now = new Date(),
+}) {
+  const [current] = upcomingChecks(paycheck, expenses, 1, now, spending, transfers);
   if (!current) return null;
   return {
     payday: current.payday,
@@ -548,6 +621,10 @@ export function paycheckBreakdown({ paycheck, expenses, spending, now = new Date
     due: current.due,
     spending: current.spending,
     spendingCount: current.spendingCount,
+    sent: current.sent,
+    sentCount: current.sentCount,
+    incoming: current.incoming,
+    incomingCount: current.incomingCount,
     left: current.left,
   };
 }
@@ -589,13 +666,36 @@ export function spendingThisYear(rows, now = new Date()) {
   return spendingTotal(rows, (date) => date.getFullYear() === now.getFullYear());
 }
 
-export function leftoverSummary({ paycheck, expenses, spending, now = new Date() }) {
+function transfersBetween(rows, predicate) {
+  let sent = 0;
+  let incoming = 0;
+
+  (rows || []).forEach((row) => {
+    if (!row?.transferred_on || !predicate(parseSpentOn(row.transferred_on))) return;
+    const amount = Number(row.amount || 0);
+    if (!amount) return;
+    if (row.direction === "RECEIVED") incoming += amount;
+    else sent += amount;
+  });
+
+  return { sent: roundMoney(sent), incoming: roundMoney(incoming) };
+}
+
+export function leftoverSummary({ paycheck, expenses, spending, transfers = [], now = new Date() }) {
   const incomeYear = yearlyIncome(paycheck);
   const incomeMonth = monthlyIncome(paycheck);
   const billsYear = yearlyBills(expenses);
   const billsMonth = monthlyBills(expenses);
   const spendMonth = spendingThisMonth(spending, now);
   const spendYear = spendingThisYear(spending, now);
+  const movedMonth = transfersBetween(
+    transfers,
+    (date) => date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  );
+  const movedYear = transfersBetween(
+    transfers,
+    (date) => date.getFullYear() === now.getFullYear()
+  );
 
   return {
     incomeMonth,
@@ -604,8 +704,18 @@ export function leftoverSummary({ paycheck, expenses, spending, now = new Date()
     billsYear,
     spendMonth,
     spendYear,
-    leftoverMonth: incomeMonth == null ? null : incomeMonth - billsMonth - spendMonth,
-    leftoverYear: incomeYear == null ? null : incomeYear - billsYear - spendYear,
+    sentMonth: movedMonth.sent,
+    sentYear: movedYear.sent,
+    incomingMonth: movedMonth.incoming,
+    incomingYear: movedYear.incoming,
+    leftoverMonth:
+      incomeMonth == null
+        ? null
+        : incomeMonth + movedMonth.incoming - billsMonth - spendMonth - movedMonth.sent,
+    leftoverYear:
+      incomeYear == null
+        ? null
+        : incomeYear + movedYear.incoming - billsYear - spendYear - movedYear.sent,
   };
 }
 

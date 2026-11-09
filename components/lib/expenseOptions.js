@@ -5,10 +5,15 @@ export const EXPENSE_KINDS = [
   { value: "SUBSCRIPTION", label: "Subscription" },
   { value: "LOAN", label: "Loan" },
   { value: "CREDIT_CARD", label: "Credit card" },
+  { value: "PAYMENT_APP", label: "Payment app" },
 ];
 
 export function tracksBalance(kind) {
   return kind === "LOAN" || kind === "CREDIT_CARD";
+}
+
+export function isPaymentApp(kind) {
+  return kind === "PAYMENT_APP";
 }
 
 export const RECOMMENDED_UTILIZATION = 0.3;

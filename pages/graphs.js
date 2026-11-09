@@ -6,31 +6,36 @@ import Loading from "../components/UI/Loading";
 import Title from "../components/UI/Title";
 import GraphsView from "../components/graphs/GraphsView";
 import { supabase } from "../components/lib/supabase";
-import { loadExpenses, loadSpending } from "../components/lib/tags";
+import { loadExpenses, loadSpending, loadTransfers } from "../components/lib/tags";
 
 function GraphsBody() {
   const [expenses, setExpenses] = useState(null);
   const [paycheck, setPaycheck] = useState(null);
   const [spending, setSpending] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
 
     (async () => {
-      const [expensesResult, paycheckResult, spendingResult] = await Promise.all([
+      const [expensesResult, paycheckResult, spendingResult, transfersResult] = await Promise.all([
         loadExpenses(),
         supabase
           .from("paychecks")
           .select("amount, schedule, next_payday, payday_one, payday_two")
           .maybeSingle(),
         loadSpending(),
+        loadTransfers(),
       ]);
 
       if (!active) return;
 
       const queryError =
-        expensesResult.error || paycheckResult.error || spendingResult.error;
+        expensesResult.error ||
+        paycheckResult.error ||
+        spendingResult.error ||
+        transfersResult.error;
 
       if (queryError) {
         setError(queryError.message);
@@ -41,6 +46,7 @@ function GraphsBody() {
       setExpenses(expensesResult.data || []);
       setPaycheck(paycheckResult.data);
       setSpending(spendingResult.data || []);
+      setTransfers(transfersResult.data || []);
     })();
 
     return () => {
@@ -54,7 +60,12 @@ function GraphsBody() {
       {error && <p className="panel text-danger">Could not load graphs. {error}</p>}
       {!expenses && !error && <Loading />}
       {expenses && !error && (
-        <GraphsView expenses={expenses} paycheck={paycheck} spending={spending} />
+        <GraphsView
+          expenses={expenses}
+          paycheck={paycheck}
+          spending={spending}
+          transfers={transfers}
+        />
       )}
     </main>
   );

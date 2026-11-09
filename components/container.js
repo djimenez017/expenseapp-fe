@@ -23,13 +23,14 @@ import {
   filterByFrequency,
   formatUtilization,
 } from "./lib/expenseOptions";
-import { collectTags, hasTag, loadExpenses, loadSpending } from "./lib/tags";
+import { collectTags, hasTag, loadExpenses, loadSpending, loadTransfers } from "./lib/tags";
 
 const TABS = [
   { id: "subscriptions", label: "Subscriptions", empty: "Nothing renews this month." },
   { id: "bills", label: "Bills", empty: "No bills yet." },
   { id: "loans", label: "Loans", empty: "No loans yet." },
   { id: "creditCards", label: "Credit cards", empty: "No credit cards yet." },
+  { id: "apps", label: "Apps", empty: "No payment apps yet." },
   { id: "spending", label: "Spending" },
 ];
 
@@ -267,11 +268,14 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
     bills: expenses.filter((expense) => !expense.kind || expense.kind === "BILL"),
     loans: expenses.filter((expense) => expense.kind === "LOAN"),
     creditCards: expenses.filter((expense) => expense.kind === "CREDIT_CARD"),
+    apps: expenses.filter((expense) => expense.kind === "PAYMENT_APP"),
   };
   const counts = {
     ...Object.fromEntries(Object.entries(groups).map(([key, value]) => [key, value.length])),
     spending: periodSpending.length,
   };
+  const visibleTabs = TABS.filter((item) => item.id === "spending" || counts[item.id] > 0);
+  const activeId = visibleTabs.some((item) => item.id === tab) ? tab : visibleTabs[0].id;
   const tags = collectTags([expenses, spending]);
   const selectedTag = tags.find((tag) => tag.id === tagId) || null;
 
@@ -286,14 +290,14 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
 
   const listed = selectedTag
     ? expenses.filter((expense) => hasTag(expense, selectedTag.id))
-    : groups[tab] || [];
+    : groups[activeId] || [];
   const taggedSpending = selectedTag ? spending.filter((item) => hasTag(item, selectedTag.id)) : [];
   const activeFrequency = scheduleInList(listed, frequency);
   const visible = filterByFrequency(listed, activeFrequency);
   const frequencyLabel =
     EXPENSE_FREQUENCIES.find((item) => item.value === activeFrequency)?.label.toLowerCase() || "";
-  const showFilters = tab !== "spending" || selectedTag;
-  const activeTab = TABS.find((item) => item.id === tab);
+  const showFilters = activeId !== "spending" || selectedTag;
+  const activeTab = TABS.find((item) => item.id === activeId);
 
   return (
     <section aria-label="Expenses" className="min-w-0 space-y-4">
@@ -302,8 +306,8 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
         aria-label="Expense type"
         className="scroll-strip -mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0"
       >
-        {TABS.map((item) => {
-          const selected = !selectedTag && tab === item.id;
+        {visibleTabs.map((item) => {
+          const selected = !selectedTag && activeId === item.id;
           return (
             <button
               key={item.id}
@@ -325,7 +329,7 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
       {(showFilters || tags.length > 0 || (tab === "spending" && periods.length > 0)) && (
         <Toolbar
           filters={
-            !selectedTag && tab === "spending" && periods.length > 0 ? (
+            !selectedTag && activeId === "spending" && periods.length > 0 ? (
               <PayPeriodSelect periods={periods} value={periodKey} onChange={setPeriodKey} />
             ) : (
               showFilters && (
@@ -381,9 +385,9 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
           </>
         )}
 
-        {!selectedTag && tab === "creditCards" && <CreditUtilization cards={groups.creditCards} />}
+        {!selectedTag && activeId === "creditCards" && <CreditUtilization cards={groups.creditCards} />}
 
-        {!selectedTag && tab !== "spending" && (
+        {!selectedTag && activeId !== "spending" && (
           <>
             {listed.length > 0 && visible.length === 0 ? (
               <p className="text-sm text-muted">No {frequencyLabel} expenses.</p>
@@ -398,7 +402,7 @@ function ExpenseTabs({ expenses, monthSpending, spending, paycheck, onChanged })
           </>
         )}
 
-        {!selectedTag && tab === "spending" && (
+        {!selectedTag && activeId === "spending" && (
           <SpendingLog
             items={periodSpending}
             onChanged={onChanged}
@@ -425,8 +429,8 @@ function PlusIcon() {
   );
 }
 
-export function DashboardView({ name, expenses, paycheck, spending, onChanged }) {
-  const summary = leftoverSummary({ paycheck, expenses, spending });
+export function DashboardView({ name, expenses, paycheck, spending, transfers = [], onChanged }) {
+  const summary = leftoverSummary({ paycheck, expenses, spending, transfers });
   const monthSpending = spending.filter((item) => isInMonth(item.spent_on));
   const firstName = String(name || "").trim().split(/\s+/)[0];
 
@@ -457,6 +461,7 @@ export function DashboardView({ name, expenses, paycheck, spending, onChanged })
           summary={summary}
           expenses={expenses}
           spending={spending}
+          transfers={transfers}
         />
         <ExpenseTabs
           expenses={expenses}
@@ -474,21 +479,26 @@ export default function Container() {
   const [expenses, setExpenses] = useState(null);
   const [paycheck, setPaycheck] = useState(null);
   const [spending, setSpending] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
   const loadDashboard = async () => {
-    const [expensesResult, paycheckResult, spendingResult] = await Promise.all([
+    const [expensesResult, paycheckResult, spendingResult, transfersResult] = await Promise.all([
       loadExpenses(),
       supabase
         .from("paychecks")
         .select("amount, schedule, next_payday, payday_one, payday_two")
         .maybeSingle(),
       loadSpending(),
+      loadTransfers(),
     ]);
 
     const queryError =
-      expensesResult.error || paycheckResult.error || spendingResult.error;
+      expensesResult.error ||
+      paycheckResult.error ||
+      spendingResult.error ||
+      transfersResult.error;
 
     if (queryError) {
       setError(queryError.message);
@@ -499,6 +509,7 @@ export default function Container() {
     setExpenses(expensesResult.data || []);
     setPaycheck(paycheckResult.data);
     setSpending(spendingResult.data || []);
+    setTransfers(transfersResult.data || []);
   };
 
   useEffect(() => {
@@ -538,6 +549,7 @@ export default function Container() {
       expenses={expenses}
       paycheck={paycheck}
       spending={spending}
+      transfers={transfers}
       onChanged={loadDashboard}
     />
   );
